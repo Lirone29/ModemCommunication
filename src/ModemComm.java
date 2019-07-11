@@ -9,7 +9,7 @@ import java.util.TooManyListenersException;
 
 public class ModemComm {
 
-    public enum PINSecurity{
+    public enum SIMSecurity{
         READY, //no password
         PIN,
         PUK,
@@ -21,7 +21,7 @@ public class ModemComm {
     String menu = "-----Choose action----- \n" +
             "1. Read information about modem \n" +
             "2. Request IMSI \n"+
-            "3. Ask if PIN | PUCK required \n" +
+            "3. Check security (PIN | PUCK) \n" +
             "4. Write own commend \n" +
             "5. Check available numbers \n"+
             "6. Write number \n"+
@@ -37,11 +37,12 @@ public class ModemComm {
     static OutputStream outputStream;
     static InputStream inputStream;
 
-    static String answer = "";
+    static String finalAnswer = "";
 
     //test data
     static String IMSI = "9508828297039";
-    PINSecurity pinSecurity = PINSecurity.NONE;
+    SIMSecurity simSecurity = SIMSecurity.NONE;
+    String simSecurityString = "";
 
     //PORT NAME
     static String modemPort = "COM13";
@@ -147,8 +148,8 @@ public class ModemComm {
         public void serialEvent(SerialPortEvent arg0) {
             int data;
             String endAnswer = "";
+            finalAnswer = "";
             try {
-                answer = "";
                 int len = 0;
                 while ((data = in.read()) > -1) {
                     if (data == 'O') {
@@ -158,9 +159,9 @@ public class ModemComm {
                         break;
                     }
                     buffer[len++] = (byte) data;
-                    answer += String.valueOf((byte) data);
                 }
                 System.out.print(new String(buffer, 0, len));
+                finalAnswer =new String(buffer, 0, len);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -222,8 +223,10 @@ public class ModemComm {
 
         System.out.println("Write phone number!");
         phoneNumber = reader.readLine();
+
         //145 - whe number has +48/ other country number in iths cypher
         //129 - when number don't have + sign
+
         int type = 145;
         System.out.println("Set text for user - alias/name");
         String text = String.valueOf(reader.readLine());
@@ -269,6 +272,18 @@ public class ModemComm {
         this.serialNumber = tmpSerialNumber;
     }
 
+    public String checkSecurity(){
+
+        String result = "";
+        String security = finalAnswer;
+        if(security.contains(String.valueOf(SIMSecurity.READY)))result = String.valueOf(SIMSecurity.READY) +"\n";
+        if(security.contains(String.valueOf("SIM " +SIMSecurity.PIN)))result = String.valueOf(SIMSecurity.PIN) + "\n";
+        if(security.contains(String.valueOf("SIM " +SIMSecurity.PUK)))result += String.valueOf(SIMSecurity.PUK) + "\n";
+        if(security.contains(String.valueOf("SIM "+SIMSecurity.PIN2)))result += String.valueOf(SIMSecurity.PIN2) + "\n";
+        if(security.contains(String.valueOf("SIM " +SIMSecurity.PUK2)))result += String.valueOf(SIMSecurity.PUK2) + "\n";
+        return result;
+    }
+
     public void menuFunction() throws IOException {
         String tmp;
         String readLine = "";
@@ -309,7 +324,18 @@ public class ModemComm {
                     break;
                 }
                 case 3: {
-                    (new Thread(new SerialWriter(outputStream, messageAskPIN))).start();
+                    Thread t1 = (new Thread(new SerialWriter(outputStream, messageAskPIN)));
+                    t1.start();
+                    try {
+                        t1.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    tmp = reader.readLine();
+                    //(new Thread(new SerialWriter(outputStream, messageAskPIN))).start();
+                    simSecurityString = checkSecurity();
+                    System.out.println("Security: \n" + simSecurityString);
                     tmp = reader.readLine();
                     break;
                 }

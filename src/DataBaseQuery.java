@@ -1,6 +1,7 @@
 public class DataBaseQuery {
     public volatile String serialNumber = "";
-    public String selectAllQuery = "SELECT *\n" +
+
+    volatile public String selectAllQuery = "SELECT *\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
             "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '"+serialNumber + "';";
 
@@ -38,6 +39,14 @@ public class DataBaseQuery {
             "FROM [Billingi].[dbo].[t_simcard]";
 
 
+    volatile String IPAddrQuery = "SELECT [Billingi].[dbo].[t_simcard].ip_addr\n" +
+            "FROM [Billingi].[dbo].[t_simcard]\n" +
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+
+    volatile String apnQuery = "SELECT [Billingi].[dbo].[t_simcard].apn\n" +
+            "FROM [Billingi].[dbo].[t_simcard]\n" +
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+
     volatile String PINQuery = "SELECT [Billingi].[dbo].[t_simcard].pin1\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
             "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
@@ -62,6 +71,13 @@ public class DataBaseQuery {
         return serialNumber;
     }
 
+    public String getIPAddrQuery() {
+        return IPAddrQuery;
+    }
+
+    public String getApnQuery(){
+        return this.apnQuery;
+    }
     public void setSerialNumber(String tmpSerialNumber) {
         this.serialNumber = tmpSerialNumber;
     }
@@ -86,14 +102,15 @@ public class DataBaseQuery {
         return this.PUK2Query;
     }
 
-    public DataBaseQuery(String tmpSerialNumber){
-        this.serialNumber = tmpSerialNumber;
-    }
     public String getSelectAllQuery() {
         return selectAllQuery;
     }
 
     public String getSelectTopQuery() {
         return selectTopQuery;
+    }
+
+    public DataBaseQuery(String tmpSerialNumber){
+        this.serialNumber = tmpSerialNumber;
     }
 }

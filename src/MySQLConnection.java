@@ -6,6 +6,14 @@ import java.util.Enumeration;
 
 public class MySQLConnection {
 
+    String sqlMenu = "Menu for SQL Query Execution: \n"+
+            "1. Get number for card \n"+
+            "2. Get PIN1 \n"+
+            "3. Get PUK1 \n"+
+            "4. Get apn \n" +
+            "5. Get IP Address \n"+
+            "0. Exit \n";
+
     String serialNmber = "";
     public void listDrivers(){
         Enumeration driverList = DriverManager.getDrivers();
@@ -37,7 +45,6 @@ public class MySQLConnection {
 
             //Executing SQL statement
             ResultSet rs=stmt.executeQuery(dbQuery.getSelectTopQuery());
-            //ResultSet rs=stmt.executeQuery("select * from emp");
 
             //Writing on console statement
             while(rs.next())
