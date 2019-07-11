@@ -15,7 +15,7 @@ public class ModemComm {
         PUK,
         PIN2,
         PUK2,
-        NONE
+        NONE //default
     }
 
     String menu = "-----Choose action----- \n" +
@@ -28,8 +28,6 @@ public class ModemComm {
             "7. Clear number \n"+
             "0. EXIT \n";
 
-    //Connection parameters?? Is it necessery to configure???
-
     int timeout = 2000;
 
     static Enumeration<CommPortIdentifier> portList;
@@ -40,16 +38,18 @@ public class ModemComm {
     static InputStream inputStream;
 
     static String answer = "";
-    static String IMSI = "";
+
+    //test data
+    static String IMSI = "9508828297039";
     PINSecurity pinSecurity = PINSecurity.NONE;
 
     //PORT NAME
     static String modemPort = "COM13";
+    public String serialNumber = null;
 
     static String PIN = "";
-    static String Puck = "";
+    static String PUK = "";
     static int phoneBookUserNumber = 1;
-   // static int phoneBookNumber = 1;
     String phoneNumber = "+48000000000";
 
     //Messages:
@@ -182,10 +182,8 @@ public class ModemComm {
             try {
                 int i = 0;
                 byte[] c = b;
-               // synchronized(this.out);
                 while ((i) < (c.length)) {
                         this.out.write(c[i]);
-                        //System.out.print(String.valueOf(c[i]));
                         i++;
                 }
             } catch (IOException e) {
@@ -262,6 +260,13 @@ public class ModemComm {
 
     public void checkPhoneNumber() {
         (new Thread(new SerialWriter(outputStream, messageWritePhonebook + "?"))).start();
+    }
+
+    public String getSerialNumber(){
+        return this.serialNumber;
+    }
+    public void setSerialNumber(String tmpSerialNumber){
+        this.serialNumber = tmpSerialNumber;
     }
 
     public void menuFunction() throws IOException {
