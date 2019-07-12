@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
@@ -10,19 +13,19 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane prefHeight="623.0" prefWidth="771.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.GUIController">
+<AnchorPane prefHeight="623.0" prefWidth="771.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.GUIController">
    <children>
       <Pane fx:id="appPane" layoutX="43.0" layoutY="31.0" prefHeight="633.0" prefWidth="720.0">
          <children>
             <Button fx:id="connectButton" layoutX="90.0" layoutY="100.0" mnemonicParsing="false" onAction="#setConnectButton" prefHeight="30.0" prefWidth="110.0" text="Connect" />
             <Label layoutX="20.0" layoutY="10.0" text="Serial Ports:" />
             <Label fx:id="modemResponseLabel" layoutX="410.0" layoutY="205.0" text="MODEM RESPONSE" />
-            <ChoiceBox fx:id="portChoiceBox" layoutX="20.0" layoutY="40.0" prefHeight="31.0" prefWidth="180.0" />
-            <TextField fx:id="commandTextField" layoutX="270.0" layoutY="100.0" prefHeight="40.0" prefWidth="240.0" />
+            <ChoiceBox fx:id="portCB" layoutX="21.0" layoutY="41.0" mouseTransparent="true" prefHeight="31.0" prefWidth="180.0" />
+            <TextField fx:id="commandTextField" layoutX="270.0" layoutY="120.0" prefHeight="40.0" prefWidth="240.0" />
             <Button fx:id="getSerialNumberButton" layoutX="20.0" layoutY="160.0" mnemonicParsing="false" onAction="#setGetSerialNumberButton" prefHeight="40.0" prefWidth="182.0" text="Get Serial Number" />
             <Button fx:id="clearNumberButton" layoutX="20.0" layoutY="300.0" mnemonicParsing="false" onAction="#setClearNumberButton" prefHeight="40.0" prefWidth="182.0" text="Clear Number" />
             <Button fx:id="writeNumberButton" layoutX="20.0" layoutY="370.0" mnemonicParsing="false" onAction="#setWriteNumberButton" prefHeight="40.0" prefWidth="182.0" text="Write Number" />
-            <Button fx:id="executeButton" layoutX="554.0" layoutY="100.0" mnemonicParsing="false" onAction="#setExecuteButton" prefHeight="40.0" prefWidth="120.0" text="Execute" />
+            <Button fx:id="executeButton" layoutX="554.0" layoutY="120.0" mnemonicParsing="false" onAction="#setExecuteButton" prefHeight="40.0" prefWidth="120.0" text="Execute" />
             <Button fx:id="checkSecurityButton" layoutX="20.0" layoutY="440.0" mnemonicParsing="false" onAction="#setCheckSecurityButton" prefHeight="40.0" prefWidth="182.0" text="Check SIM Security " />
             <Button fx:id="compareIPButton" layoutX="20.0" layoutY="510.0" mnemonicParsing="false" onAction="#setCompareIPButton" prefHeight="40.0" prefWidth="182.0" text="Compare IP addres" />
             <Button fx:id="modemInfoButton" layoutX="554.0" layoutY="30.0" mnemonicParsing="false" onAction="#setModemInfoButton" prefHeight="30.0" prefWidth="120.0" text="Modem Info" />
@@ -40,6 +43,9 @@
                   </AnchorPane>
               </content>
             </ScrollPane>
+            <Label fx:id="LTELabel" layoutX="270.0" layoutY="80.0" text="LTE status:" />
+            <Label fx:id="LTEStatus" layoutX="410.0" layoutY="80.0" text="NULL" />
+            <ComboBox fx:id="portComboBox" layoutX="30.0" layoutY="570.0" prefWidth="150.0" />
          </children>
       </Pane>
       <Button fx:id="clearButton" layoutX="630.0" layoutY="630.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="100.0" text="Clear" />

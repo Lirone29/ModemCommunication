@@ -25,6 +25,7 @@ public class MySQLConnection {
         }
     }
 
+
     MySQLConnection(String tmpSerialNumber) throws SQLException {
 
         this.serialNmber = tmpSerialNumber;

@@ -22,12 +22,13 @@ public class ModemComm {
     int timeout = 2000;
 
     static Enumeration<CommPortIdentifier> portList;
-    static ArrayList<CommPortIdentifier> serialPortList;
+    static ArrayList<String> serialPortList;
     static CommPortIdentifier portId;
 
     static SerialPort serialPort;
     static OutputStream outputStream;
     static InputStream inputStream;
+
 
     static String finalAnswer = "";
 
@@ -52,12 +53,18 @@ public class ModemComm {
     static String messageModemId = "ATI" + CR;
     static String messageAskPIN = "AT+CPIN?" + CR;
 
+    static String messageLTE = "AT^BODYSARLTE=?" + CR;
+    static String messagePDPContext = "AT+CGACT?" + CR;
+    static String messageIP = "AT+CGPADDR=1" + CR;
     static String messageWritePIN = "AT+CPIN=" + CR;
     //Identyfikacja karty SIM przy pomocy IMSI
     static String messageIMSI = "AT+CIMI" + CR;
 
+    static String messageConnection = "AT+CGATT?" + CR;
+
     //"P2" SIM PIN2 || "SC" SIM card (if this parameter is set, MT will request the password during startup)
     // change PIN - AT+CPWD="SC","9999","1234" || "AT+CPIN=\"0000\"";
+
 
     static String messageEnterPIN = "AT+CPIN=";
     static String messageSelectOperator = "AT+COPS" + CR;
@@ -76,11 +83,19 @@ public class ModemComm {
     //read all available ports
     public static void getAllPorts() {
         portList = CommPortIdentifier.getPortIdentifiers();
+        serialPortList = new ArrayList<>();
         while (portList.hasMoreElements()) {
             CommPortIdentifier portIdentifier = portList.nextElement();
-            if (portIdentifier.getPortType() == CommPortIdentifier.PORT_SERIAL) serialPortList.add(portIdentifier);
-            System.out.println(portIdentifier.getName());
+            if (portIdentifier.getPortType() == CommPortIdentifier.PORT_SERIAL){
+                serialPortList.add(portIdentifier.getName());
+                System.out.println(portIdentifier.getName());
+            }
         }
+    }
+
+    public ArrayList getAllSerialPorts(){
+        ArrayList<String> tmpList = serialPortList;
+        return tmpList;
     }
 
     public void setModemPort(String tmpModemPort){
@@ -293,7 +308,7 @@ public class ModemComm {
             "0. EXIT \n";
 
 
-    public void getModemInfo() {
+    public String getModemInfo() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageModemId)));
         t1.start();
         try {
@@ -301,9 +316,10 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return finalAnswer;
     }
 
-    public void readSimCardSerialNumber() {
+    public String readSimCardSerialNumber() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageIMSI)));
         t1.start();
         try {
@@ -311,9 +327,10 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return finalAnswer;
     }
 
-    public void readSecurity() {
+    public String readSecurity() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageAskPIN)));
         t1.start();
         try {
@@ -324,9 +341,10 @@ public class ModemComm {
 
         simSecurityString = checkSecurity();
         System.out.println("Security: \n" + simSecurityString);
+        return finalAnswer;
     }
 
-    public void writeOnwCommand(BufferedReader reader) throws IOException {
+    public String writeOnwCommand(BufferedReader reader) throws IOException {
         String tmp = "";
         while (true) {
             System.out.println("Write Command: \n");
@@ -343,9 +361,10 @@ public class ModemComm {
             tmp = reader.readLine();
             if (tmp.equals("N") || tmp.equals("n")) break;
         }
+        return finalAnswer;
     }
 
-    public void checkNumbersOnSIM() {
+    public String checkNumbersOnSIM() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageCheckNumbers)));
         t1.start();
         try {
@@ -353,9 +372,39 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return finalAnswer;
     }
 
-    public void checkIPVersion() {
+    public Boolean checkLTE(){
+        return false;
+    }
+
+    public String getIP(){
+
+        Thread t1 = new Thread(new SerialWriter(outputStream,messagePDPContext ));
+        t1.start();
+        try {
+            t1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        String result = finalAnswer;
+        if(result.contains("1,1")){
+
+            Thread t2 = new Thread(new SerialWriter(outputStream,messageIP));
+            t2.start();
+            try {
+                t2.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return finalAnswer;
+        }
+
+        return null;
+    }
+
+    public String checkIPVersion() {
         Thread t1 = new Thread(new SerialWriter(outputStream, messageCheckIPVersion));
         t1.start();
         try {
@@ -363,6 +412,7 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        return finalAnswer;
     }
 
     public void menuFunction() throws IOException {
@@ -452,14 +502,17 @@ public class ModemComm {
 
     }
 
-    public static ArrayList<CommPortIdentifier> getSerialPortList() {
+    /*
+    public static ArrayList<String> getSerialPortList() {
         return serialPortList;
     }
-
+*/
     public ModemComm() {
 
         getAllPorts();
+        /*
         setModemPort();
+
         if (connect() && portId.isCurrentlyOwned()) System.out.println("Connected!");
         else System.out.println("Connection Failed!!!");
 
@@ -468,6 +521,8 @@ public class ModemComm {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        */
+
     }
 
 }

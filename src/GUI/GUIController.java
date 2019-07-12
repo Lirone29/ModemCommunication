@@ -59,10 +59,16 @@ public class GUIController {
     private Button displayNumbersButton;
 
     @FXML
-    private Button clearButton;
+    private ChoiceBox<String> portChoiceBox;
 
     @FXML
-    private ChoiceBox<String> portChoiceBox;
+    private ChoiceBox<?> portCB;
+
+    @FXML
+    private ComboBox<?> portComboBox;
+
+    @FXML
+    private Button clearButton;
 
     @FXML
     private Button checkSecurityButton;
@@ -72,26 +78,63 @@ public class GUIController {
 
     //145 - number dont have
     Object[] possibilitiesType = {"145", "129"};
+    Object[] PDP_Types = {"IP", "PPP", "IPV6", "IPV4V6"};
+
 
     //String numberType = JOptionPane.showInputDialog("Write type of number:\n 145 - number dont have + \n 129 - number have", 145);
     //String numberToWrite = JOptionPane.showInputDialog("Write number: \n");
     //int userNumber = Integer.valueOf(JOptionPane.showInputDialog("Write user number ID:", 1));
 
-    ArrayList choiceBox;
+    ArrayList<String> choiceBox;
+    ObservableList choiceList;
+
     public GUIController(){
-        choiceBox = modemComm.getSerialPortList();
-        ObservableList choiceList = FXCollections.observableArrayList();
-        (choiceBox).forEach(n -> choiceList.add(choiceBox.indexOf(n)));
 
-        //for(int i = 0 ;i < choiceList.size(); i++){
-        //    portChoiceBox.getItems().add(choiceList.indexOf(i));
-        //}
+        choiceBox = new ArrayList<String>();
+        modemComm = new ModemComm();
+        choiceBox =modemComm.getAllSerialPorts();
 
-        (choiceList).forEach(n -> portChoiceBox.getItems().add(String.valueOf(choiceList.indexOf(n))));
+
+        choiceList= FXCollections.observableArrayList(choiceBox);
+        /*
+        for(int i = 0 ; i < choiceBox.size(); i++){
+            choiceList.add(choiceBox.get(i));
+
+
+        }*/
+
+        System.out.println(choiceList);
+
+        portCB = new ChoiceBox<>();
+       // portCB.getItems().add();
+        portCB = new ChoiceBox<>(FXCollections.observableArrayList(choiceBox));
+        //portCB.getTooltip().setText("Choose Port");
+        portComboBox = new ComboBox<String>(choiceList);
+        for(int i = 0; i < choiceList.size(); i ++) {
+            System.out.println(choiceList.get(i));
+
+           // portComboBox.getItems().setAll(choiceList);
+        }
+
+        //portComboBox = new ComboBox<String>(choiceList);
+        //portChoiceBox = new ChoiceBox<String>(choiceList);
+        //portChoiceBox.setItems(choiceList);
+
+       /* portChoiceBox = ChoiceBoxBuilder.create()
+                .items(choiceList)
+                .build();
+*/
+       // portChoiceBox.getSelectionModel()
+       //         .selectedItemProperty();
+
+        //portChoiceBox.setValue("B");
+    //(choiceList).forEach(n -> portChoiceBox.getItems().add(String.valueOf(choiceList.indexOf(n))));
+
     }
 
-    public void setModemInfoButton(){
 
+    public void setModemInfoButton(){
+        this.modemTextArea.setText(modemComm.getModemInfo());
     }
 
     public void setStatusLabel(){
@@ -116,7 +159,7 @@ public class GUIController {
     }
 
     public void setCompareIPButton(){
-
+        System.out.println("IP BUtton");
     }
 
     public void setGetSerialNumberButton(){
