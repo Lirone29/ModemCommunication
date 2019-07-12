@@ -1,9 +1,11 @@
+package App;
+
 public class DataBaseQuery {
     public volatile String serialNumber = "";
 
     volatile public String selectAllQuery = "SELECT *\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '"+serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
 
     String selectTopQuery = "SELECT TOP (10) [simcard_idx]\n" +
             "               ,[msisdn]\n" +
@@ -51,7 +53,7 @@ public class DataBaseQuery {
             "FROM [Billingi].[dbo].[t_simcard]\n" +
             "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
 
-    volatile String PIN2Query =  "SELECT [Billingi].[dbo].[t_simcard].pin2\n" +
+    volatile String PIN2Query = "SELECT [Billingi].[dbo].[t_simcard].pin2\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
             "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
 
@@ -75,30 +77,31 @@ public class DataBaseQuery {
         return IPAddrQuery;
     }
 
-    public String getApnQuery(){
+    public String getApnQuery() {
         return this.apnQuery;
     }
+
     public void setSerialNumber(String tmpSerialNumber) {
         this.serialNumber = tmpSerialNumber;
     }
 
-    public String getMSISDNQuery(){
+    public String getMSISDNQuery() {
         return this.MSISDNQuery;
     }
 
-    public String getPINQuery(){
+    public String getPINQuery() {
         return this.PINQuery;
     }
 
-    public String getPIN2Query(){
+    public String getPIN2Query() {
         return this.PIN2Query;
     }
 
-    public String getPUKQuery(){
+    public String getPUKQuery() {
         return this.PUKQuery;
     }
 
-    public String getPUK2Query(){
+    public String getPUK2Query() {
         return this.PUK2Query;
     }
 
@@ -110,7 +113,7 @@ public class DataBaseQuery {
         return selectTopQuery;
     }
 
-    public DataBaseQuery(String tmpSerialNumber){
+    public DataBaseQuery(String tmpSerialNumber) {
         this.serialNumber = tmpSerialNumber;
     }
 }

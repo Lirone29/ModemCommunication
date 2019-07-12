@@ -1,6 +1,6 @@
-import java.sql.SQLException;
+package App;
 
-public class Main {
+public class Main{
 
     public static void main(String[] args) {
 
@@ -8,7 +8,7 @@ public class Main {
 
         /*
         try {
-            MySQLConnection con = new MySQLConnection(modemComm.getSerialNumber());
+            App.MySQLConnection con = new App.MySQLConnection(modemComm.getSerialNumber());
         } catch (SQLException e) {
             e.printStackTrace();
         }

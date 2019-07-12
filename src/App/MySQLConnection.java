@@ -1,4 +1,4 @@
-import sun.security.x509.SerialNumber;
+package App;
 
 import java.sql.*;
 import java.util.Enumeration;
@@ -6,21 +6,22 @@ import java.util.Enumeration;
 
 public class MySQLConnection {
 
-    String sqlMenu = "Menu for SQL Query Execution: \n"+
-            "1. Get number for card \n"+
-            "2. Get PIN1 \n"+
-            "3. Get PUK1 \n"+
+    String sqlMenu = "Menu for SQL Query Execution: \n" +
+            "1. Get number for card \n" +
+            "2. Get PIN1 \n" +
+            "3. Get PUK1 \n" +
             "4. Get apn \n" +
-            "5. Get IP Address \n"+
+            "5. Get IP Address \n" +
             "0. Exit \n";
 
     String serialNmber = "";
-    public void listDrivers(){
+
+    public void listDrivers() {
         Enumeration driverList = DriverManager.getDrivers();
         System.out.println("\nList of drivers:");
         while (driverList.hasMoreElements()) {
             Driver driverClass = (Driver) driverList.nextElement();
-            System.out.println("   "+driverClass.getClass().getName());
+            System.out.println("   " + driverClass.getClass().getName());
         }
     }
 
@@ -41,14 +42,14 @@ public class MySQLConnection {
             else System.out.println("No Connection");
 
             //Creating statement
-            Statement stmt=con.createStatement();
+            Statement stmt = con.createStatement();
 
             //Executing SQL statement
-            ResultSet rs=stmt.executeQuery(dbQuery.getSelectTopQuery());
+            ResultSet rs = stmt.executeQuery(dbQuery.getSelectTopQuery());
 
             //Writing on console statement
-            while(rs.next())
-                System.out.println(rs.getInt(1)+"  "+rs.getString(2)+"  "+rs.getString(3));
+            while (rs.next())
+                System.out.println(rs.getInt(1) + "  " + rs.getString(2) + "  " + rs.getString(3));
             con.close();
         } catch (Exception e) {
             System.out.println(e);

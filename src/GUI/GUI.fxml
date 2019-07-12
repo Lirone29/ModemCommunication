@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+
+<AnchorPane prefHeight="623.0" prefWidth="771.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GUI.GUIController">
+   <children>
+      <Pane fx:id="appPane" layoutX="43.0" layoutY="31.0" prefHeight="633.0" prefWidth="720.0">
+         <children>
+            <Button fx:id="connectButton" layoutX="90.0" layoutY="100.0" mnemonicParsing="false" onAction="#setConnectButton" prefHeight="30.0" prefWidth="110.0" text="Connect" />
+            <Label layoutX="20.0" layoutY="10.0" text="Serial Ports:" />
+            <Label fx:id="modemResponseLabel" layoutX="410.0" layoutY="205.0" text="MODEM RESPONSE" />
+            <ChoiceBox fx:id="portChoiceBox" layoutX="20.0" layoutY="40.0" prefHeight="31.0" prefWidth="180.0" />
+            <TextField fx:id="commandTextField" layoutX="270.0" layoutY="100.0" prefHeight="40.0" prefWidth="240.0" />
+            <Button fx:id="getSerialNumberButton" layoutX="20.0" layoutY="160.0" mnemonicParsing="false" onAction="#setGetSerialNumberButton" prefHeight="40.0" prefWidth="182.0" text="Get Serial Number" />
+            <Button fx:id="clearNumberButton" layoutX="20.0" layoutY="300.0" mnemonicParsing="false" onAction="#setClearNumberButton" prefHeight="40.0" prefWidth="182.0" text="Clear Number" />
+            <Button fx:id="writeNumberButton" layoutX="20.0" layoutY="370.0" mnemonicParsing="false" onAction="#setWriteNumberButton" prefHeight="40.0" prefWidth="182.0" text="Write Number" />
+            <Button fx:id="executeButton" layoutX="554.0" layoutY="100.0" mnemonicParsing="false" onAction="#setExecuteButton" prefHeight="40.0" prefWidth="120.0" text="Execute" />
+            <Button fx:id="checkSecurityButton" layoutX="20.0" layoutY="440.0" mnemonicParsing="false" onAction="#setCheckSecurityButton" prefHeight="40.0" prefWidth="182.0" text="Check SIM Security " />
+            <Button fx:id="compareIPButton" layoutX="20.0" layoutY="510.0" mnemonicParsing="false" onAction="#setCompareIPButton" prefHeight="40.0" prefWidth="182.0" text="Compare IP addres" />
+            <Button fx:id="modemInfoButton" layoutX="554.0" layoutY="30.0" mnemonicParsing="false" onAction="#setModemInfoButton" prefHeight="30.0" prefWidth="120.0" text="Modem Info" />
+            <Label fx:id="modemLabel" layoutX="270.0" layoutY="35.0" prefHeight="21.0" prefWidth="114.0" text="Modem status: " />
+            <Button fx:id="displayNumbersButton" layoutX="20.0" layoutY="230.0" mnemonicParsing="false" onAction="#setDisplayNumbersButton" prefHeight="40.0" prefWidth="182.0" text="Display SIM numbers" />
+            <Label fx:id="statusLabel" layoutX="410.0" layoutY="35.0" text="DISCONECTED" />
+            <Separator layoutX="237.0" orientation="VERTICAL" prefHeight="633.0" prefWidth="8.0" />
+            <Separator layoutX="242.0" layoutY="188.0" prefHeight="0.0" prefWidth="464.0" />
+            <ScrollPane fx:id="modemScrollPane" layoutX="265.0" layoutY="230.0" prefHeight="355.0" prefWidth="418.0">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <TextArea fx:id="modemTextArea" layoutX="7.0" layoutY="14.0" prefHeight="335.0" prefWidth="392.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="-202.0" AnchorPane.topAnchor="10.0" />
+                     </children>
+                  </AnchorPane>
+              </content>
+            </ScrollPane>
+         </children>
+      </Pane>
+      <Button fx:id="clearButton" layoutX="630.0" layoutY="630.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="100.0" text="Clear" />
+   </children>
+</AnchorPane>
