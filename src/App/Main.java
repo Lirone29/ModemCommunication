@@ -2,9 +2,9 @@ package App;
 
 public class Main{
 
-    public static void main(String[] args) {
+   // public static void main(String[] args) {
 
-        ModemComm modemComm = new ModemComm();
+       // ModemComm modemComm = new ModemComm();
 
         /*
         try {
@@ -15,5 +15,5 @@ public class Main{
 
            */
 
-    }
+  //  }
 }

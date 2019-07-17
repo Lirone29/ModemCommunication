@@ -2,6 +2,7 @@ package App;
 
 import gnu.io.*;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -16,11 +17,9 @@ public class ModemComm {
         PUK,
         PIN2,
         PUK2,
-        NONE //default
     }
 
-    int timeout = 2000;
-
+    static boolean flag = false;
     static Enumeration<CommPortIdentifier> portList;
     static ArrayList<String> serialPortList;
     static CommPortIdentifier portId;
@@ -29,16 +28,14 @@ public class ModemComm {
     static OutputStream outputStream;
     static InputStream inputStream;
 
-
     static String finalAnswer = "";
 
     //test data
-    static String IMSI = "9508828297039";
-    SIMSecurity simSecurity = SIMSecurity.NONE;
-    String simSecurityString = "";
+    static String modemResponse = "";
+    //-------FOR TEST--------- static String IMSI = "9508828297039";
 
     //PORT NAME
-    String modemPort = "COM13";
+    volatile String modemPort = "COM13";
     public String serialNumber = null;
 
     static String PIN = "";
@@ -47,36 +44,22 @@ public class ModemComm {
     String phoneNumber = "+48000000000";
 
     //Messages:
-
     static String CR = "\r\n";
     String ownMessage = "";
     static String messageModemId = "ATI" + CR;
     static String messageAskPIN = "AT+CPIN?" + CR;
-
-    static String messageLTE = "AT^BODYSARLTE=?" + CR;
     static String messagePDPContext = "AT+CGACT?" + CR;
     static String messageIP = "AT+CGPADDR=1" + CR;
-    static String messageWritePIN = "AT+CPIN=" + CR;
-    //Identyfikacja karty SIM przy pomocy IMSI
+   // static String messageWritePIN = "AT+CPIN=" + CR;
     static String messageIMSI = "AT+CIMI" + CR;
 
-    static String messageConnection = "AT+CGATT?" + CR;
-
-    //"P2" SIM PIN2 || "SC" SIM card (if this parameter is set, MT will request the password during startup)
-    // change PIN - AT+CPWD="SC","9999","1234" || "AT+CPIN=\"0000\"";
-
-
-    static String messageEnterPIN = "AT+CPIN=";
-    static String messageSelectOperator = "AT+COPS" + CR;
-    static String messageRegisterNetwork = "AT+CREG" + CR;
-    static String messageChangePassword = "AT+CPWD" + CR;
-
+    //static String messageConnection = "AT+CGATT?" + CR;
+    static String messageLTE = "AT^SYSINFOEX" + CR;
     static String messageCheckIPVersion = "AT^IPV6CAP?" + CR;
     int ipVersion = 0;
+
     //returns all numbers Currently written in PhoneBook| the MSISDN
     static String messageCheckNumbers = "AT+CNUM" + CR;
-
-    static String messageSignalQuality = "AT+CSQ" + CR;
     static String messageSelectPhonebookMemoryStorage = "AT+CPBS=\"ON\"" + CR;
     static String messageWritePhonebook = "AT+CPBW=";
 
@@ -88,18 +71,12 @@ public class ModemComm {
             CommPortIdentifier portIdentifier = portList.nextElement();
             if (portIdentifier.getPortType() == CommPortIdentifier.PORT_SERIAL){
                 serialPortList.add(portIdentifier.getName());
-                System.out.println(portIdentifier.getName());
             }
         }
     }
 
     public ArrayList getAllSerialPorts(){
-        ArrayList<String> tmpList = serialPortList;
-        return tmpList;
-    }
-
-    public void setModemPort(String tmpModemPort){
-        this.modemPort = tmpModemPort;
+        return serialPortList;
     }
 
     public String getOwnMessage() {
@@ -117,9 +94,8 @@ public class ModemComm {
         } else {
             if (portId.getName().equals(modemPort)) {
                 try {
-
                     // Port owner and connection timeout
-                    serialPort = (SerialPort) portId.open(modemPort, timeout);
+                    serialPort = (SerialPort) portId.open(modemPort, 2000);
 
                     // Configure connection parameters - baudrate,  dataBits,   stopBits,   parity
                     serialPort.setSerialPortParams(57600, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
@@ -132,8 +108,8 @@ public class ModemComm {
 
                     serialPort.addEventListener(new SerialReader(inputStream));
                     serialPort.notifyOnDataAvailable(true);
-
                     return true;
+
                 } catch (PortInUseException e) {
                     e.printStackTrace();
                 } catch (UnsupportedCommOperationException e) {
@@ -148,6 +124,7 @@ public class ModemComm {
         }
     }
 
+    //-------------Class to read modem response ----------------
     public static class SerialReader implements SerialPortEventListener {
         private InputStream in;
         private byte[] buffer = new byte[1024];
@@ -163,16 +140,22 @@ public class ModemComm {
             try {
                 int len = 0;
                 while ((data = in.read()) > -1) {
+                    buffer[len++] = (byte) data;
                     if (data == 'O') {
-                        endAnswer = String.valueOf(data);
+                        endAnswer = String.valueOf((byte)data);
                     }
-                    if (data == 'K' && endAnswer.equals("O")) {
+                    if ((data == 'K') && (endAnswer.equals("79"))) {
+                        modemResponse = new String(buffer, 0, len);
+                        flag = true;
                         break;
                     }
-                    buffer[len++] = (byte) data;
-                }
-                System.out.print(new String(buffer, 0, len));
+            }
                 finalAnswer = new String(buffer, 0, len);
+                System.out.print(new String(buffer, 0, len));
+                if(finalAnswer.contains("ERROR")){
+                    flag = true;
+                    modemResponse = finalAnswer;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -180,6 +163,7 @@ public class ModemComm {
 
     }
 
+//-------------Class to write on commands to modem ----------------
     public static class SerialWriter implements Runnable {
         OutputStream out;
         String commandToWrite = "";
@@ -205,24 +189,37 @@ public class ModemComm {
         }
     }
 
-    //setting up modem as current port
-    public void setModemPort() {
-        CommPortIdentifier tmpPortId = null;
-        portList = null;
-        portList = CommPortIdentifier.getPortIdentifiers();
-        while (portList.hasMoreElements()) {
-            tmpPortId = (CommPortIdentifier) portList.nextElement();
-            if (tmpPortId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-                if (tmpPortId.getName().equals(modemPort)) {
-                    portId = tmpPortId;
-                    return;
-                }
-            }
-        }
+    public void setPortName(String portName){
+        modemPort = portName;
+        setModemPort();
     }
 
-    public void writePhoneNumber(BufferedReader readerTmp) throws IOException {
-        BufferedReader reader = readerTmp;
+    //setting up modem as current port
+    public void setModemPort() {
+            CommPortIdentifier tmpPortId = null;
+            portList = null;
+            portList = CommPortIdentifier.getPortIdentifiers();
+            while (portList.hasMoreElements()) {
+                tmpPortId = (CommPortIdentifier) portList.nextElement();
+                if (tmpPortId.getPortType() == CommPortIdentifier.PORT_SERIAL) {
+                    if (tmpPortId.getName().equals(modemPort)) {
+                        portId = tmpPortId;
+                        return;
+                    }
+                }
+            }
+    }
+
+    //GOOD
+    public String getModemResponse(){
+       while (!flag){
+       }
+        flag = false;
+        return modemResponse;
+    }
+
+    //GOOD
+    public void enablePhonebookMemoryStore(){
         Thread t1 = new Thread(new SerialWriter(outputStream, messageSelectPhonebookMemoryStorage));
         t1.start();
         try {
@@ -230,17 +227,15 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
 
-        System.out.println("Write phone number!");
-        phoneNumber = reader.readLine();
-
-        //145 - whe number has +48/ other country number in iths cypher
-        //129 - when number don't have + sign
-
-        int type = 145;
-        System.out.println("Set text for user - alias/name :");
-        String text = String.valueOf(reader.readLine());
-        phoneNumber = "+48" + phoneNumber;
+    //GOOD
+    public void writePhoneNumber()
+    {
+        int type =Integer.valueOf(JOptionPane.showInputDialog("Write type of number:\n 145 - number dont have + \n 129 - number have", 145));
+        phoneNumber =  JOptionPane.showInputDialog("Write phone number: \n");
+        String text = JOptionPane.showInputDialog("User alias/name:");
+        phoneBookUserNumber = Integer.valueOf(JOptionPane.showInputDialog("Write user number ID:", 1));
         String mesWritePhonebook = messageWritePhonebook += phoneBookUserNumber + ",\"" + phoneNumber + "\"," + type + ",\"" + text + "\"" + CR;
 
         Thread t2 = (new Thread(new SerialWriter(outputStream, mesWritePhonebook)));
@@ -253,6 +248,7 @@ public class ModemComm {
 
     }
 
+    //GOOD
     public void clearNumber() {
 
         Thread t1 = new Thread(new SerialWriter(outputStream, messageSelectPhonebookMemoryStorage));
@@ -262,6 +258,9 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        phoneBookUserNumber = Integer.valueOf(JOptionPane.showInputDialog("Write user number ID to clear:", 1));
+
         Thread t2 = new Thread(new SerialWriter(outputStream, "AT+CPBW=" + phoneBookUserNumber + CR));
         t2.start();
         try {
@@ -276,18 +275,57 @@ public class ModemComm {
         return this.serialNumber;
     }
 
+    //GOOD
+    public void setSerialNumberFromInput(){
+        this.serialNumber = modemResponse.replaceAll("[^0-9?!\\.]","");
+    }
+
     public void setSerialNumber(String tmpSerialNumber) {
         this.serialNumber = tmpSerialNumber;
+    }
+
+    //GOOD
+    public String checkSecurity(String security) {
+
+        String result = "";
+        if (security.contains(String.valueOf(SIMSecurity.READY))) {
+            result = String.valueOf(SIMSecurity.READY) + "\n";
+            PIN = "PIN  -  ";
+            PUK = "PUK  -  ";
+        }
+        if (security.contains(String.valueOf("SIM " + SIMSecurity.PIN + " "))) {
+            result = String.valueOf(SIMSecurity.PIN) + "\n";
+            PIN = "SIM PIN";
+        }
+        if (security.contains(String.valueOf("SIM " + SIMSecurity.PUK + " "))) {
+            result += String.valueOf(SIMSecurity.PUK) + "\n";
+            PUK = "SIM PUK";
+        }
+        if (security.contains(String.valueOf("SIM " + SIMSecurity.PIN2))) {
+            result += String.valueOf(SIMSecurity.PIN2) + "\n";
+            PIN = "SIM PIN2";
+        }
+        if (security.contains(String.valueOf("SIM " + SIMSecurity.PUK2))) {
+            result += String.valueOf(SIMSecurity.PUK2) + "\n";
+            PUK = "SIM PUK2";
+        }
+        return "\n" +PIN + " \n" + PUK;
     }
 
     public String checkSecurity() {
 
         String result = "";
         String security = finalAnswer;
-        if (security.contains(String.valueOf(SIMSecurity.READY))) result = String.valueOf(SIMSecurity.READY) + "\n";
-        if (security.contains(String.valueOf("SIM " + SIMSecurity.PIN)))
+        if (security.contains(String.valueOf(SIMSecurity.READY))) {
+            result = String.valueOf(SIMSecurity.READY) + "\n";
+            PIN = null;
+            PUK = null;
+        }
+
+        if (security.contains(String.valueOf("SIM " + SIMSecurity.PIN + ""))) {
             result = String.valueOf(SIMSecurity.PIN) + "\n";
-        if (security.contains(String.valueOf("SIM " + SIMSecurity.PUK)))
+        }
+        if (security.contains(String.valueOf("SIM " + SIMSecurity.PUK+"")))
             result += String.valueOf(SIMSecurity.PUK) + "\n";
         if (security.contains(String.valueOf("SIM " + SIMSecurity.PIN2)))
             result += String.valueOf(SIMSecurity.PIN2) + "\n";
@@ -296,19 +334,8 @@ public class ModemComm {
         return result;
     }
 
-    String menu = "-----Choose action----- \n" +
-            "1. Read information about modem \n" +
-            "2. Request IMSI \n" +
-            "3. Check security (PIN | PUCK) \n" +
-            "4. Write own commend \n" +
-            "5. Check available numbers \n" +
-            "6. Write number \n" +
-            "7. Clear number \n" +
-            "8. Check IP version \n" +
-            "0. EXIT \n";
-
-
-    public String getModemInfo() {
+    //GOOD
+    public void getModemInfo() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageModemId)));
         t1.start();
         try {
@@ -316,10 +343,10 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return finalAnswer;
     }
 
-    public String readSimCardSerialNumber() {
+    //GOOD
+    public void readSimCardSerialNumber() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageIMSI)));
         t1.start();
         try {
@@ -327,10 +354,10 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return finalAnswer;
     }
 
-    public String readSecurity() {
+    //GOOD
+    public void readSecurity() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageAskPIN)));
         t1.start();
         try {
@@ -338,33 +365,21 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        simSecurityString = checkSecurity();
-        System.out.println("Security: \n" + simSecurityString);
-        return finalAnswer;
     }
 
-    public String writeOnwCommand(BufferedReader reader) throws IOException {
-        String tmp = "";
-        while (true) {
-            System.out.println("Write Command: \n");
-            ownMessage = reader.readLine() + CR;
-            Thread t1 = (new Thread(new SerialWriter(outputStream, ownMessage)));
-            t1.start();
-            try {
-                t1.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            tmp = reader.readLine();
-            System.out.println("Do you want to continue writing own command Y|N ?");
-            tmp = reader.readLine();
-            if (tmp.equals("N") || tmp.equals("n")) break;
+    //GOOD
+    public void writeCommand(String command){
+        Thread t1 = (new Thread(new SerialWriter(outputStream, command +CR)));
+        t1.start();
+        try {
+            t1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        return finalAnswer;
     }
 
-    public String checkNumbersOnSIM() {
+
+    public void checkNumbersOnSIM() {
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageCheckNumbers)));
         t1.start();
         try {
@@ -372,16 +387,29 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return finalAnswer;
     }
 
-    public Boolean checkLTE(){
-        return false;
+    //GOOD
+    public String checkLTE(){
+        Thread t1 = (new Thread(new SerialWriter(outputStream, messageLTE)));
+        t1.start();
+        try {
+            t1.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        String result =getModemResponse();
+
+        if(result.contains("6,\"LTE\""))return new String("LTE - Supported");
+        else if(result.contains("101,\"LTE\"")) return new String("LTE- sub-mode Supported");
+        else return new String("LTE - Not Supported");
     }
 
+    //----------------to CHECK---------------------
     public String getIP(){
 
-        Thread t1 = new Thread(new SerialWriter(outputStream,messagePDPContext ));
+        Thread t1 = new Thread(new SerialWriter(outputStream,messagePDPContext));
         t1.start();
         try {
             t1.join();
@@ -415,114 +443,8 @@ public class ModemComm {
         return finalAnswer;
     }
 
-    public void menuFunction() throws IOException {
-        String tmp;
-        String readLine = "";
-        boolean answer = true;
-        int menuChoose = -1;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-        while (answer != false) {
-            menuChoose = -1;
-            readLine = "";
-            System.out.println(menu);
-            try {
-                while (readLine.equals("")) {
-                    readLine = reader.readLine();
-                    if (readLine.equals("")) continue;
-                    if (Integer.parseInt(readLine) < 0 || Integer.parseInt(readLine) > 10) {
-                        System.out.println("Wrong number given! Try again.");
-                        continue;
-                    } else menuChoose = Integer.parseInt(readLine);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            switch (menuChoose) {
-                case 0: {
-                    //EXIT
-                    answer = false;
-                    break;
-                }
-                case 1: {
-                    //MODEM INFORMATION
-                    getModemInfo();
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 2: {
-                    //SIM CARD Serial number
-                    readSimCardSerialNumber();
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 3: {
-                    //Check Security
-                    readSecurity();
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 4: {
-                    //Write own command
-                    writeOnwCommand(reader);
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 5: {
-                    //Check numbers on SIM card
-                    checkNumbersOnSIM();
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 6: {
-                    //Write phone numbert to SIM casr
-                    writePhoneNumber(reader);
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 7: {
-                    //Clear currnet number
-                    clearNumber();
-                    tmp = reader.readLine();
-                    break;
-                }
-                case 8: {
-                    //Check IP Version
-                    checkIPVersion();
-                    tmp = reader.readLine();
-                    break;
-                }
-                default: {
-                    System.out.println("Error! Wrong number was given!");
-                }
-
-            }
-        }
-
-    }
-
-    /*
-    public static ArrayList<String> getSerialPortList() {
-        return serialPortList;
-    }
-*/
     public ModemComm() {
-
-        getAllPorts();
-        /*
-        setModemPort();
-
-        if (connect() && portId.isCurrentlyOwned()) System.out.println("Connected!");
-        else System.out.println("Connection Failed!!!");
-
-        try {
-            menuFunction();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
-
+       getAllPorts();
     }
 
 }

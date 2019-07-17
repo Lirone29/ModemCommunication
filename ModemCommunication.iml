@@ -10,5 +10,6 @@
     <orderEntry type="library" name="i368-mingw32" level="project" />
     <orderEntry type="library" name="RXTXcomm" level="project" />
     <orderEntry type="library" name="mssql-jdbc-7.2.2.jre8" level="project" />
+    <orderEntry type="library" name="jgoodies-common-1.4.0" level="project" />
   </component>
 </module>

@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="GUI.GUIForm">
+  <grid id="27dc6" binding="panelGUI" layout-manager="GridLayoutManager" row-count="11" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="10" vgap="10">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="190" y="115" width="1330" height="550"/>
+    </constraints>
+    <properties>
+      <maximumSize width="750" height="550"/>
+      <minimumSize width="750" height="550"/>
+      <preferredSize width="750" height="550"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <component id="4a4e" class="javax.swing.JComboBox" binding="serialPortComboBox">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="120" height="35"/>
+            <preferred-size width="120" height="35"/>
+            <maximum-size width="120" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <model/>
+          <preferredSize width="120" height="30"/>
+        </properties>
+      </component>
+      <component id="f5105" class="javax.swing.JButton" binding="connectButton" default-binding="true">
+        <constraints>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="120" height="35"/>
+            <preferred-size width="120" height="35"/>
+            <maximum-size width="120" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <opaque value="false"/>
+          <preferredSize width="100" height="30"/>
+          <text value="Connect"/>
+        </properties>
+      </component>
+      <component id="a93fe" class="javax.swing.JLabel" binding="modemLabel">
+        <constraints>
+          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="30"/>
+            <preferred-size width="170" height="30"/>
+            <maximum-size width="170" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <minimumSize width="75" height="30"/>
+          <preferredSize width="90" height="30"/>
+          <text value="Modem status:"/>
+        </properties>
+      </component>
+      <component id="a7077" class="javax.swing.JLabel" binding="lteLabel">
+        <constraints>
+          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="150" height="30"/>
+            <preferred-size width="150" height="30"/>
+            <maximum-size width="150" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <horizontalAlignment value="2"/>
+          <horizontalTextPosition value="0"/>
+          <preferredSize width="90" height="30"/>
+          <text value="LTE: Not Supported"/>
+        </properties>
+      </component>
+      <component id="f4a2b" class="javax.swing.JTextField" binding="commandTextField">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="2" indent="0" use-parent-layout="false">
+            <minimum-size width="320" height="30"/>
+            <preferred-size width="320" height="30"/>
+            <maximum-size width="320" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="50" height="30"/>
+          <minimumSize width="50" height="30"/>
+          <preferredSize width="50" height="30"/>
+        </properties>
+      </component>
+      <component id="494ba" class="javax.swing.JLabel" binding="SQLLabel">
+        <constraints>
+          <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="150" height="30"/>
+            <preferred-size width="150" height="30"/>
+            <maximum-size width="150" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <horizontalAlignment value="0"/>
+          <horizontalTextPosition value="0"/>
+          <preferredSize width="90" height="30"/>
+          <text value="DataBase: DISCONECTED"/>
+        </properties>
+      </component>
+      <component id="1b9ad" class="javax.swing.JTextArea" binding="modemTextArea">
+        <constraints>
+          <grid row="4" column="2" row-span="5" col-span="3" vsize-policy="0" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <maximumSize width="50" height="30"/>
+          <minimumSize width="50" height="30"/>
+          <preferredSize width="50" height="30"/>
+          <requestFocusEnabled value="true"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="4cb53" class="javax.swing.JLabel" binding="serialPortsLabel">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="120" height="30"/>
+            <preferred-size width="120" height="30"/>
+            <maximum-size width="120" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <preferredSize width="100" height="30"/>
+          <text value="Serial Ports"/>
+        </properties>
+      </component>
+      <component id="54b38" class="javax.swing.JButton" binding="executeButton" default-binding="true">
+        <constraints>
+          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="100" height="30"/>
+            <preferred-size width="100" height="30"/>
+            <maximum-size width="100" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="74" height="30"/>
+          <minimumSize width="74" height="30"/>
+          <preferredSize width="100" height="30"/>
+          <text value="Execute"/>
+        </properties>
+      </component>
+      <component id="a7c7b" class="javax.swing.JButton" binding="clearButton" default-binding="true">
+        <constraints>
+          <grid row="9" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="100" height="30"/>
+            <preferred-size width="100" height="30"/>
+            <maximum-size width="100" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="100" height="25"/>
+          <minimumSize width="100" height="25"/>
+          <preferredSize width="100" height="30"/>
+          <text value="Clear"/>
+        </properties>
+      </component>
+      <component id="6d2cd" class="javax.swing.JLabel" binding="modemResponseLabel">
+        <constraints>
+          <grid row="3" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="110" height="30"/>
+            <preferred-size width="110" height="30"/>
+            <maximum-size width="110" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <horizontalAlignment value="0"/>
+          <horizontalTextPosition value="0"/>
+          <preferredSize width="110" height="30"/>
+          <text value="Modem Response"/>
+        </properties>
+      </component>
+      <component id="45ffc" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="1" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="7ea31" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="9ddbb" class="javax.swing.JButton" binding="DBConnectButton" default-binding="true">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+            <minimum-size width="120" height="35"/>
+            <preferred-size width="120" height="35"/>
+            <maximum-size width="120" height="35"/>
+          </grid>
+        </constraints>
+        <properties>
+          <text value="DB Connect"/>
+        </properties>
+      </component>
+      <component id="37d9a" class="javax.swing.JButton" binding="checkSIMSecurityButton" default-binding="true">
+        <constraints>
+          <grid row="9" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="40"/>
+            <preferred-size width="170" height="40"/>
+            <maximum-size width="170" height="40"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="150" height="30"/>
+          <minimumSize width="150" height="30"/>
+          <opaque value="true"/>
+          <preferredSize width="170" height="40"/>
+          <text value="Check SIM Security"/>
+        </properties>
+      </component>
+      <component id="79ea6" class="javax.swing.JButton" binding="clearNumberButton" default-binding="true">
+        <constraints>
+          <grid row="8" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="40"/>
+            <preferred-size width="170" height="40"/>
+            <maximum-size width="170" height="40"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="150" height="30"/>
+          <minimumSize width="150" height="30"/>
+          <preferredSize width="170" height="40"/>
+          <text value="Clear Phone Number"/>
+        </properties>
+      </component>
+      <component id="4c95" class="javax.swing.JButton" binding="writeNumberButton" default-binding="true">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="40"/>
+            <preferred-size width="170" height="52"/>
+            <maximum-size width="170" height="40"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="150" height="30"/>
+          <minimumSize width="150" height="30"/>
+          <preferredSize width="170" height="40"/>
+          <text value="Write Phone Number"/>
+        </properties>
+      </component>
+      <component id="f8829" class="javax.swing.JButton" binding="compareIPAddressButton" default-binding="true">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="40"/>
+            <preferred-size width="170" height="40"/>
+            <maximum-size width="170" height="40"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="130" height="30"/>
+          <minimumSize width="150" height="30"/>
+          <preferredSize width="170" height="40"/>
+          <text value="Compare IP Address"/>
+        </properties>
+      </component>
+      <component id="f4d6e" class="javax.swing.JButton" binding="displaySIMNumberButton" default-binding="true">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="40"/>
+            <preferred-size width="170" height="40"/>
+            <maximum-size width="170" height="40"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="150" height="30"/>
+          <minimumSize width="150" height="30"/>
+          <preferredSize width="170" height="40"/>
+          <text value="Display SIM Numbers"/>
+        </properties>
+      </component>
+      <component id="4488" class="javax.swing.JButton" binding="getSerialNumberButton" default-binding="true">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="7" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="170" height="40"/>
+            <preferred-size width="170" height="40"/>
+            <maximum-size width="170" height="40"/>
+          </grid>
+        </constraints>
+        <properties>
+          <maximumSize width="150" height="30"/>
+          <minimumSize width="150" height="30"/>
+          <preferredSize width="170" height="40"/>
+          <text value="Serial Number"/>
+        </properties>
+      </component>
+      <component id="cac4" class="javax.swing.JButton" binding="modemInfoButton" default-binding="true">
+        <constraints>
+          <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="1" anchor="0" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="100" height="30"/>
+            <preferred-size width="100" height="30"/>
+            <maximum-size width="100" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <preferredSize width="100" height="30"/>
+          <text value="Modem Info"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>
