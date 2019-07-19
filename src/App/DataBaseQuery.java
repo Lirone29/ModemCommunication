@@ -1,11 +1,11 @@
 package App;
 
 public class DataBaseQuery {
-    public volatile String serialNumber = "";
+    public String serialNumber = "";
 
-    volatile public String selectAllQuery = "SELECT *\n" +
+    public String selectAllQuery = "SELECT *\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
 
     String selectTopQuery = "SELECT TOP (10) [simcard_idx]\n" +
             "               ,[msisdn]\n" +
@@ -40,34 +40,39 @@ public class DataBaseQuery {
             "               ,[invoicing_period]\n" +
             "FROM [Billingi].[dbo].[t_simcard]";
 
-
+/*
     volatile String IPAddrQuery = "SELECT [Billingi].[dbo].[t_simcard].ip_addr\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
             "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+*/
 
-    volatile String apnQuery = "SELECT [Billingi].[dbo].[t_simcard].apn\n" +
+    String IPAddrQuery = "SELECT [Billingi].[dbo].[t_simcard].ip_addr\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
 
-    volatile String PINQuery = "SELECT [Billingi].[dbo].[t_simcard].pin1\n" +
+    String apnQuery = "SELECT [Billingi].[dbo].[t_simcard].apn\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
 
-    volatile String PIN2Query = "SELECT [Billingi].[dbo].[t_simcard].pin2\n" +
+    String PINQuery = "SELECT [Billingi].[dbo].[t_simcard].pin1\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
 
-    volatile String PUKQuery = "SELECT [Billingi].[dbo].[t_simcard].puk1\n" +
+    String PIN2Query = "SELECT [Billingi].[dbo].[t_simcard].pin2\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
 
-    volatile String PUK2Query = "SELECT [Billingi].[dbo].[t_simcard].puk2\n" +
+    String PUKQuery = "SELECT [Billingi].[dbo].[t_simcard].puk1\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
 
-    volatile String MSISDNQuery = "SELECT [Billingi].[dbo].[t_simcard].msisdn\n" +
+    String PUK2Query = "SELECT [Billingi].[dbo].[t_simcard].puk2\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '";
+
+    String MSISDNQuery = "SELECT [Billingi].[dbo].[t_simcard].msisdn\n" +
+            "FROM [Billingi].[dbo].[t_simcard]\n" +
+            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" ;
 
     public String getSerialNumber() {
         return serialNumber;
@@ -113,7 +118,21 @@ public class DataBaseQuery {
         return selectTopQuery;
     }
 
+    public void setQueries()
+    {
+        this.IPAddrQuery = this.IPAddrQuery + this.serialNumber + "';";
+        this.MSISDNQuery = this.MSISDNQuery + this.serialNumber + "';";
+        this.selectAllQuery = this.selectAllQuery + this.serialNumber + "';";
+        this.apnQuery = this.apnQuery +  this.serialNumber + "';";
+        this.PINQuery = this.PINQuery +  this.serialNumber + "';";
+        this.PIN2Query = this.PIN2Query +  this.serialNumber + "';";
+        this.PUKQuery = this.PUKQuery +  this.serialNumber + "';";
+        this.PUK2Query = this.PUK2Query +  this.serialNumber + "';";
+
+    }
+
     public DataBaseQuery(String tmpSerialNumber) {
         this.serialNumber = tmpSerialNumber;
+        setQueries();
     }
 }

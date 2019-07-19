@@ -1,5 +1,6 @@
 package App;
 
+import javax.swing.*;
 import java.sql.*;
 import java.util.Enumeration;
 
@@ -15,10 +16,15 @@ public class MySQLConnection {
             "0. Exit \n";
 
     String serialNmber = "";
+    String serwerIP = "172.23.6.95";
+    String user = "msisdn";
+    String password = "a05msisdn";
 
-    Statement stmt;
-    Connection con;
-    DataBaseQuery dbQuery;
+    //Without static
+    static Statement stmt;
+    static Connection con;
+    static DataBaseQuery dbQuery;
+    boolean connectionStatus = false;
 
     public void listDrivers() {
         Enumeration driverList = DriverManager.getDrivers();
@@ -29,49 +35,118 @@ public class MySQLConnection {
         }
     }
 
-
     public void closeConnection() throws SQLException {
         con.close();
     }
 
-    public String getIP() throws SQLException {
+    public String getPuk1() throws SQLException {
         stmt = con.createStatement();
-        ResultSet rs = stmt.executeQuery(dbQuery.IPAddrQuery);
-        return rs.getString(0);
-        //while (rs.next())
-        //    System.out.println(rs.getInt(1) + "  " + rs.getString(2) + "  " + rs.getString(3));
+        ResultSet rs = stmt.executeQuery(dbQuery.getPUKQuery());
+        String result = "";
+        while (rs.next()) {
+            result = rs.getString("puk1");
+        }
+        return result;
     }
-    public MySQLConnection(String tmpSerialNumber) throws SQLException {
 
-        this.serialNmber = tmpSerialNumber;
-        String user = "msisdn";
-        String password = "a05msisdn";
-        dbQuery = new DataBaseQuery(tmpSerialNumber);
+    public String getPuk2() throws SQLException {
+        stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(dbQuery.getPUK2Query());
+        String result = "";
+        while (rs.next()) {
+            result = rs.getString("puk2");
+        }
+        return result;
+    }
 
+    public String getPin2() throws SQLException {
+        stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(dbQuery.getPIN2Query());
+        String result = "";
+        while (rs.next()) {
+            result = rs.getString("pin2");
+        }
+        return result;
+    }
+
+    public String getPin1() throws SQLException {
+        stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(dbQuery.getPINQuery());
+        String result = "";
+        while (rs.next()) {
+            result = rs.getString("pin1");
+        }
+        return result;
+    }
+
+    public String getAPN() throws SQLException {
+        stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(dbQuery.getApnQuery());
+        String result = "";
+        while (rs.next()) {
+            result = rs.getString("apn");
+        }
+        return result;
+    }
+
+    public static String getIP() throws SQLException {
+        stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(dbQuery.getIPAddrQuery());
+        String result = "";
+        while (rs.next()) {
+            result = rs.getString("ip_addr");
+        }
+        return result;
+    }
+
+    public void configureConnection(){
+        serwerIP = JOptionPane.showInputDialog("Serwer IP: ", serwerIP);
+        user = JOptionPane.showInputDialog("User: ", user);
+        password = JOptionPane.showInputDialog("Password: ", password);
+    }
+
+    public boolean isConnectionStatus() {
+        return connectionStatus;
+    }
+
+    public void connect(){
         try {
-
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            String url = "jdbc:sqlserver://172.23.6.95";
+            String url = "jdbc:sqlserver://"+serwerIP;
             con = DriverManager.getConnection(url, user, password);
 
-            if (!con.isClosed()) System.out.println("Connected to DataBase");
-            else System.out.println("No Connection");
+            if (!con.isClosed()) connectionStatus = true;
+            else connectionStatus=false;
 
-            //Creating statement
-            //Statement stmt = con.createStatement();
-
-            //Executing SQL statement
-            //ResultSet rs = stmt.executeQuery(dbQuery.getSelectTopQuery());
-
-            //Writing on console statement
-           // while (rs.next())
-            //    System.out.println(rs.getInt(1) + "  " + rs.getString(2) + "  " + rs.getString(3));
-            //con.close();
         } catch (Exception e) {
             System.out.println(e);
         }
     }
 
+    public MySQLConnection(String tmpSerialNumber) throws SQLException {
+
+        this.serialNmber = tmpSerialNumber;
+        dbQuery = new DataBaseQuery(tmpSerialNumber);
+
+        //-----------FOR TESTS-----------------------
+        //serialNmber = "9508828297039";
+        //dbQuery = new DataBaseQuery("9508828297039");
+
+    }
+
+    /*
+    static String ip;
+
+    public static void main(String[] args) throws SQLException {
+        try {
+            new MySQLConnection("9508828297039");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        ip = getIP();
+        System.out.println(ip);
+    }
+*/
 }
 
 
