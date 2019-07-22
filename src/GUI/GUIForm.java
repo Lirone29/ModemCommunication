@@ -240,7 +240,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             }
 
             if (connection == true){
-                this.modemLabel.setText("Modem : CONNECTED ," + portName);
+                this.modemLabel.setText("Modem: CONNECTED ," + portName);
                 this.lteLabel.setText(modemComm.checkLTE());
                 setSecurity();
             }

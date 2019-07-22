@@ -31,7 +31,7 @@ public class ModemComm {
     static ArrayList<String> serialPortList;
     static CommPortIdentifier portId;
 
-    APN_Version apn_version = APN_Version.APN_database;
+    APN_Version apn_version;
 
     SerialReader reader;
     SerialPort serialPort;
@@ -52,13 +52,13 @@ public class ModemComm {
     static int phoneBookUserNumber = 1;
     String phoneNumber = "+48000000000";
     int ipVersion = 0;
-    String APN = "";
+    String databaseAPN = "";
     public int PinNumber=0000;
     public int Pin1Number = 0000;
     public int Pin2Number = 0000;
     public int Puk1Number = 0000;
     public int Puk2Number = 0000;
-    String defaultAPN = "INTERNET";
+    String internetAPN = "INTERNET";
     String user = "INTERNET";
     String password = "INTERNET";
     String IP = null;
@@ -83,13 +83,17 @@ public class ModemComm {
     static String CR = "\r\n";
     static String messageModemId = "ATI" + CR;
     static String messageAskPIN = "AT+CPIN?" + CR;
-    static String messagePDPContext = "AT+CGACT?" + CR;
+    static String messageAskPDPContext = "AT+CGACT?" + CR;
     static String messageIP = "AT+CGPADDR=1" + CR;
     static String messageWritePIN = "AT+CPIN=";
-    String messageAttachContext = "AT+CGATT=1"+CR;
+
+    String messageAttachGPRSService = "AT+CGATT=1"+CR;
+    String messageAttachContext = "AT+CGACT=1"+CR;
     String messageCSQ = "AT+CSQ"+CR;
-    //pytam o IP i CSQ - połącznei IP + BAR DO CSQ
-    // static String messageWritePIN = "AT+CPIN=" + CR;
+    String messageEnableRegistration = "AT+CREG=1" + CR;
+    String messageDefineContext = "AT+CGDCONT=1,\"IP\",\"";
+    String messageCheckNetworkRegistration = "AT+CREG?"+CR;
+
     static String messageIMSI = "AT+CIMI" + CR;
     static String messageLTE = "AT^SYSINFOEX" + CR;
    // static String messageCheckIPVersion = "AT^IPV6CAP?" + CR;
@@ -98,11 +102,11 @@ public class ModemComm {
     static String messageWritePhonebook = "AT+CPBW=";
 
     public String getAPN() {
-        return APN;
+        return databaseAPN;
     }
 
     public void setAPN(String APN) {
-        this.APN = APN;
+        this.databaseAPN = APN;
     }
 
     //GOOD
@@ -114,28 +118,66 @@ public class ModemComm {
         return result;
     }
 
-    public String apnDatabase(){
+    //public String apnDatabase(){
+    //    return null;
+    //}
+
+    //public String apnInternet(){
+    //    return null;
+    //}
+
+    boolean answer = false;
+
+    //TO check non-stop by thread
+    public String checkIP(){
         return null;
     }
 
-    public String apnInternet(){
+    public String getIPAddress(){
         return null;
     }
-
     //GOOD
     public String getIP(){
         String result="";
-        switch (apn_version){
-            case APN_database:{
-                result = apnDatabase();
-                break;
+        if(answer =false)  answer = unlockPIN();
+            switch (apn_version) {
+                case APN_database: {
+                    {
+                        answer = unlockPIN();
+                        writeCommandToModem(messageAttachGPRSService);
+                        while(result.contains("+GREG: 1,0")) {
+                            writeCommandToModem(messageCheckNetworkRegistration);
+                            result = getModemResponse();
+                        }
+                        writeCommandToModem(messageDefineContext + internetAPN + "\"" + CR);
+                        writeCommandToModem(messageAskPDPContext);
+                        result = getModemResponse();
+                        writeCommandToModem(messageAttachContext);
+                        result = getModemResponse();
+                        result = getIPAddress();
+                    }
+                    break;
+                }
+                case APN_Internet: {
+                    {
+                        writeCommandToModem(messageAttachGPRSService);
+                        while(result.contains("+GREG: 1,0")) {
+                            writeCommandToModem(messageCheckNetworkRegistration);
+                            result = getModemResponse();
+                        }
+                        writeCommandToModem(messageDefineContext + databaseAPN + "\"" + CR);
+                        writeCommandToModem(messageAskPDPContext);
+                        result = getModemResponse();
+                        writeCommandToModem(messageAttachContext);
+                        result = getModemResponse();
+                        result = getIPAddress();
+                    }
+                    break;
+                }
+                default:
+                    return null;
             }
-            case APN_Internet:{
-                result = apnDatabase();
-                break;
-            }
-            default: return null;
-        }
+
 
         if(result==null){
             if(apn_version==APN_Version.APN_database)
@@ -145,24 +187,12 @@ public class ModemComm {
 
         return result;
     }
+
     //odpytywanie przez wątek z modemu o IP i CSQ - wątek synchronizowany
-
-
-    public void threadFunction(){
-        //AT+PIN
-        //apn odczytane z bazy lub domyślnie INTERNET,U: INTERNET, P: INTERNET
-        //AT+CGDCONT=1, "IP", "apn", inne parametry
-        //
-        //POTEM: AT+CGATT=1
-        //Zapytanie o IP
-
-    }
-
-    //Czy mam odczytywać PIN/PUK z bazy danych ???
-    //Czy mam z automatu wpisywać 0000
+    //Czy mam odczytywać PIN/PUK z bazy danych ??? z automatu wpisywać 0000
     //OD RAZU PRZY POŁĄCZENIU Z modemem ma rozpocząc się odpytywanie!!
 
-    public void unlockPIN(){
+    public boolean unlockPIN(){
         String result="";
         while (!result.contains("READY")) {
            writeCommandToModem(messageAskPIN);
@@ -189,28 +219,7 @@ public class ModemComm {
             }
 
         }
-    }
-
-
-    //first time
-    //attach context only the first tima !!!
-    public void checkIP(){
-
-        String result = "";
-        writeCommandToModem(messageAskPIN);
-
-        if(!finalAnswer.contains("+CPIN:"))result = finalAnswer;
-        else result = getModemResponse();
-
-        if(!result.contains("READY"))unlockPIN();
-
-        String messageSetContex = "AT+CGDCONT=1,\"IP\",\""+this.APN+"\""+CR;
-
-        writeCommandToModem(messageSetContex);
-
-        writeCommandToModem(messageAttachContext);
-
-
+        return (result.contains("READY"));
     }
 
     //read all available ports
@@ -545,7 +554,7 @@ public class ModemComm {
 
     public void checkPDPContext() {
         if(connection==false) return;
-        writeCommandToModem(messagePDPContext);
+        writeCommandToModem(messageAskPDPContext);
 
     }
 
@@ -591,8 +600,13 @@ public class ModemComm {
         return true;
     }
 
+    public void setInternetApn(){
+        apn_version = APN_Version.APN_Internet;
+    }
+
     public ModemComm() {
         getAllPorts();
+        apn_version = APN_Version.APN_database;
 
     }
 
