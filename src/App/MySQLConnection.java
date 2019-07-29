@@ -20,7 +20,6 @@ public class MySQLConnection {
     String user = "msisdn";
     String password = "a05msisdn";
 
-    //Without static
     static Statement stmt;
     static Connection con;
     static DataBaseQuery dbQuery;
@@ -99,7 +98,7 @@ public class MySQLConnection {
         return result;
     }
 
-    public void configureConnection(){
+    public void configureConnection() {
         serwerIP = JOptionPane.showInputDialog("Serwer IP: ", serwerIP);
         user = JOptionPane.showInputDialog("User: ", user);
         password = JOptionPane.showInputDialog("Password: ", password);
@@ -109,14 +108,14 @@ public class MySQLConnection {
         return connectionStatus;
     }
 
-    public void connect(){
+    public void connect() {
         try {
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            String url = "jdbc:sqlserver://"+serwerIP;
+            String url = "jdbc:sqlserver://" + serwerIP;
             con = DriverManager.getConnection(url, user, password);
 
             if (!con.isClosed()) connectionStatus = true;
-            else connectionStatus=false;
+            else connectionStatus = false;
 
         } catch (Exception e) {
             System.out.println(e);
@@ -125,28 +124,14 @@ public class MySQLConnection {
 
     public MySQLConnection(String tmpSerialNumber) throws SQLException {
 
-        this.serialNmber = tmpSerialNumber;
-        dbQuery = new DataBaseQuery(tmpSerialNumber);
+        //this.serialNmber = tmpSerialNumber;
+        //dbQuery = new DataBaseQuery(tmpSerialNumber);
 
         //-----------FOR TESTS-----------------------
-        //serialNmber = "9508828297039";
-        //dbQuery = new DataBaseQuery("9508828297039");
+        this.serialNmber = "9508828297039";
+        dbQuery = new DataBaseQuery("9508828297039");
 
     }
-
-    /*
-    static String ip;
-
-    public static void main(String[] args) throws SQLException {
-        try {
-            new MySQLConnection("9508828297039");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        ip = getIP();
-        System.out.println(ip);
-    }
-*/
 }
 
 

@@ -13,10 +13,11 @@ import java.util.TooManyListenersException;
 
 public class ModemComm {
 
-    public enum APN_Version{
+    public enum APN_Version {
         APN_database,
         APN_Internet,
     }
+
     public enum SIMSecurity {
         READY, //no password
         PIN,
@@ -30,54 +31,34 @@ public class ModemComm {
     static Enumeration<CommPortIdentifier> portList;
     static ArrayList<String> serialPortList;
     static CommPortIdentifier portId;
-
     APN_Version apn_version;
-
     SerialReader reader;
     SerialPort serialPort;
     OutputStream outputStream;
     InputStream inputStream;
 
-    static String finalAnswer = "";
-    static String modemResponse = "";
-
     //-----FOR TEST----------
-    static String IMSI = "9508828297039";
+    // static String IMSI = "9508828297039";
 
     //PARAMETERS:
+    static String modemResponse = "";
     volatile String modemPort = "COM13";
     public String serialNumber = null;
     static String PIN = "";
     static String PUK = "";
     static int phoneBookUserNumber = 1;
     String phoneNumber = "+48000000000";
-    int ipVersion = 0;
+    boolean answer = false;
     String databaseAPN = "";
-    public int PinNumber=0000;
-    public int Pin1Number = 0000;
-    public int Pin2Number = 0000;
-    public int Puk1Number = 0000;
-    public int Puk2Number = 0000;
+    public String Pin1Number = "0000";
+    public String Pin2Number = "0000";
+    public String Puk1Number = "0000";
+    public String Puk2Number = "0000";
     String internetAPN = "INTERNET";
     String user = "INTERNET";
     String password = "INTERNET";
     String IP = null;
-
-    public void setPin1Number(int pin1Number) {
-        Pin1Number = pin1Number;
-    }
-
-    public void setPin2Number(int pin2Number) {
-        Pin2Number = pin2Number;
-    }
-
-    public void setPuk1Number(int puk1Number) {
-        Puk1Number = puk1Number;
-    }
-
-    public void setPuk2Number(int puk2Number) {
-        Puk2Number = puk2Number;
-    }
+    String CSQ = null;
 
     //Messages:
     static String CR = "\r\n";
@@ -87,22 +68,42 @@ public class ModemComm {
     static String messageIP = "AT+CGPADDR=1" + CR;
     static String messageWritePIN = "AT+CPIN=";
 
-    String messageAttachGPRSService = "AT+CGATT=1"+CR;
-    String messageAttachContext = "AT+CGACT=1"+CR;
-    String messageCSQ = "AT+CSQ"+CR;
+    String messageTurnOffPeriodic = "AT^CURC=0" + CR;
+    String messageAttachGPRSService = "AT+CGATT=1" + CR;
+    String messageAttachContext = "AT+CGACT=1" + CR;
+    String messageCSQ = "AT+CSQ" + CR;
     String messageEnableRegistration = "AT+CREG=1" + CR;
     String messageDefineContext = "AT+CGDCONT=1,\"IP\",\"";
-    String messageCheckNetworkRegistration = "AT+CREG?"+CR;
+    String messageCheckNetworkRegistration = "AT+CREG?" + CR;
 
     static String messageIMSI = "AT+CIMI" + CR;
     static String messageLTE = "AT^SYSINFOEX" + CR;
-   // static String messageCheckIPVersion = "AT^IPV6CAP?" + CR;
     static String messageCheckNumbers = "AT+CNUM" + CR;
     static String messageSelectPhonebookMemoryStorage = "AT+CPBS=\"ON\"" + CR;
     static String messageWritePhonebook = "AT+CPBW=";
 
+    public void setPin1Number(String pin1Number) {
+        Pin1Number = pin1Number;
+    }
+
+    public void setPin2Number(String pin2Number) {
+        Pin2Number = pin2Number;
+    }
+
+    public void setPuk1Number(String puk1Number) {
+        Puk1Number = puk1Number;
+    }
+
+    public void setPuk2Number(String puk2Number) {
+        Puk2Number = puk2Number;
+    }
+
     public String getAPN() {
         return databaseAPN;
+    }
+
+    public void turnSpamOff() {
+        writeCommandToModem(messageTurnOffPeriodic);
     }
 
     public void setAPN(String APN) {
@@ -110,77 +111,125 @@ public class ModemComm {
     }
 
     //GOOD
-    public String getCSQ(){
+    public String getCSQ() {
         writeCommandToModem(messageCSQ);
-        String result = finalAnswer;
-        if(!result.contains("CSQ"))result=getModemResponse();
-        result = result.replaceAll("[^0-9?!\\.]", "");
+        String result = modemResponse;
+        if (!result.contains("CSQ")) result = getModemResponse();
+        String[] result2 = result.split(":");
+        result = result2[1].replaceAll("OK", "");
         return result;
     }
 
-    //public String apnDatabase(){
-    //    return null;
-    //}
-
-    //public String apnInternet(){
-    //    return null;
-    //}
-
-    boolean answer = false;
-
-    //TO check non-stop by thread
-    public String checkIP(){
-        return null;
+    public String checkIPAddr() {
+        String result = null;
+        writeCommandToModem(messageIP);
+        do {
+            result = getModemResponse();
+            if (result.contains("ERROR")) return null;
+        } while (!result.contains("CGPADDR:"));
+        setIPAddress(result);
+        return IP;
     }
 
-    public String getIPAddress(){
-        return null;
+    public boolean getConnection() {
+        return connection;
     }
-    //GOOD
-    public String getIP(){
-        String result="";
-        if(answer =false)  answer = unlockPIN();
-            switch (apn_version) {
-                case APN_database: {
-                    {
-                        answer = unlockPIN();
-                        writeCommandToModem(messageAttachGPRSService);
-                        while(result.contains("+GREG: 1,0")) {
-                            writeCommandToModem(messageCheckNetworkRegistration);
-                            result = getModemResponse();
-                        }
-                        writeCommandToModem(messageDefineContext + internetAPN + "\"" + CR);
-                        writeCommandToModem(messageAskPDPContext);
+
+    public void setIPAddress(String tmp) {
+        String[] value = tmp.split("\"");
+        String result = value[1];
+        System.out.println(result);
+        IP = result;
+    }
+
+    public String getIPAddress() {
+        return IP;
+    }
+
+    public String getIP() {
+        String result = "";
+        if (answer == false) answer = unlockPIN();
+        switch (apn_version) {
+            case APN_database: {
+                {
+                    writeCommandToModem(messageEnableRegistration);
+                    do {
                         result = getModemResponse();
-                        writeCommandToModem(messageAttachContext);
+                        if (result.contains("ERROR")) break;
+                    } while (!(result.contains(messageEnableRegistration.trim())));
+
+                    do {
+                        writeCommandToModem(messageCheckNetworkRegistration);
                         result = getModemResponse();
-                        result = getIPAddress();
+                        if (result.contains("ERROR")) break;
+                    } while (!result.contains("1,1"));
+
+                    writeCommandToModem(messageAttachGPRSService);
+                    result = getModemResponse();
+                    while (!result.contains(messageAttachGPRSService.trim())) {
+                        result = getModemResponse();
                     }
-                    break;
-                }
-                case APN_Internet: {
-                    {
-                        writeCommandToModem(messageAttachGPRSService);
-                        while(result.contains("+GREG: 1,0")) {
-                            writeCommandToModem(messageCheckNetworkRegistration);
-                            result = getModemResponse();
-                        }
-                        writeCommandToModem(messageDefineContext + databaseAPN + "\"" + CR);
-                        writeCommandToModem(messageAskPDPContext);
+
+                    writeCommandToModem(messageDefineContext + databaseAPN + "\"" + CR);
+                    result = getModemResponse();
+                    result = getModemResponse();
+
+                    writeCommandToModem(messageAskPDPContext);
+                    do {
                         result = getModemResponse();
-                        writeCommandToModem(messageAttachContext);
-                        result = getModemResponse();
-                        result = getIPAddress();
-                    }
-                    break;
+                    } while (!result.contains("1,1"));
+
+                    writeCommandToModem(messageAttachContext);
+                    result = getModemResponse();
+                    result = checkIPAddr();
+
                 }
-                default:
-                    return null;
+                break;
             }
+            case APN_Internet: {
+                {
+                    writeCommandToModem(messageEnableRegistration);
+                    do {
+                        result = getModemResponse();
+                        if (result.contains("ERROR")) break;
+                    } while (!(result.contains(messageEnableRegistration.trim())));
+
+                    do {
+                        writeCommandToModem(messageCheckNetworkRegistration);
+                        result = getModemResponse();
+                        if (result.contains("ERROR")) break;
+                    } while (!result.contains("1,1"));
+
+                    writeCommandToModem(messageAttachGPRSService);
+                    result = getModemResponse();
+                    while (!result.contains(messageAttachGPRSService.trim())) {
+                        result = getModemResponse();
+                    }
+
+                    writeCommandToModem(messageDefineContext + internetAPN + "\"" + CR);
+                    result = getModemResponse();
+                    result = getModemResponse();
+                    //writeCommandToModem(messageDefineContext + internetAPN + "ppp\"" + CR);
+
+                    writeCommandToModem(messageAskPDPContext);
+                    do {
+                        result = getModemResponse();
+                    } while (!result.contains("1,1"));
+
+                    writeCommandToModem(messageAttachContext);
+                    result = getModemResponse();
+                    result = checkIPAddr();
+                    //System.out.println(result);
+                }
+                break;
+            }
+            default:
+                return null;
+        }
 
 
-        if(result==null){
-            if(apn_version==APN_Version.APN_database)
+        if (result == null) {
+            if (apn_version == APN_Version.APN_database)
                 apn_version = APN_Version.APN_Internet;
             else apn_version = APN_Version.APN_database;
         }
@@ -188,32 +237,28 @@ public class ModemComm {
         return result;
     }
 
-    //odpytywanie przez wątek z modemu o IP i CSQ - wątek synchronizowany
-    //Czy mam odczytywać PIN/PUK z bazy danych ??? z automatu wpisywać 0000
-    //OD RAZU PRZY POŁĄCZENIU Z modemem ma rozpocząc się odpytywanie!!
-
-    public boolean unlockPIN(){
-        String result="";
+    public boolean unlockPIN() {
+        String result = "";
         while (!result.contains("READY")) {
-           writeCommandToModem(messageAskPIN);
+            writeCommandToModem(messageAskPIN);
 
-            if (!finalAnswer.contains("+CPIN:")) result = finalAnswer;
+            if (modemResponse.contains("+CPIN:")) result = modemResponse;
             else result = getModemResponse();
 
-            if (result.contains("SIM PIN")){
+            if (result.contains("SIM PIN")) {
                 writeCommandToModem(messageWritePIN + Pin1Number + CR);
                 continue;
             }
 
-            if (result.contains("SIM PIN2")){
+            if (result.contains("SIM PIN2")) {
                 writeCommandToModem(messageWritePIN + Pin2Number + CR);
                 continue;
             }
-            if (result.contains("SIM PUK")){
+            if (result.contains("SIM PUK")) {
                 writeCommandToModem(messageWritePIN + Puk1Number + CR);
                 continue;
             }
-            if (result.contains("SIM PUK2")){
+            if (result.contains("SIM PUK2")) {
                 writeCommandToModem(messageWritePIN + Puk2Number + CR);
                 continue;
             }
@@ -278,7 +323,7 @@ public class ModemComm {
         }
     }
 
-    public synchronized void writeCommandToModem(String command){
+    public synchronized void writeCommandToModem(String command) {
         Thread t1 = new Thread(new SerialWriter(outputStream, command));
         t1.start();
         try {
@@ -300,7 +345,6 @@ public class ModemComm {
         public synchronized void serialEvent(SerialPortEvent arg0) {
             int data;
             String endAnswer = "";
-            finalAnswer = "";
             modemResponse = "";
 
             try {
@@ -327,10 +371,6 @@ public class ModemComm {
                         buffer[len++] = (byte) data;
                     }
                     modemResponse = new String(buffer, 0, len);
-                }
-
-                finalAnswer = new String(buffer, 0, len);
-                if (finalAnswer.contains("ERROR:")) {
                     flag = true;
                 }
                 this.in.close();
@@ -338,7 +378,6 @@ public class ModemComm {
                 e.printStackTrace();
             }
         }
-
     }
 
     //-------------Class to write on commands to modem ----------------
@@ -369,11 +408,6 @@ public class ModemComm {
                     out.write(c[i]);
                     i++;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            try {
                 this.out.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -395,7 +429,7 @@ public class ModemComm {
         public synchronized void run() {
             serialPort.close();
             serialPort.removeEventListener();
-            if(portId.isCurrentlyOwned())System.out.println("IN USE IN CLOSE THREAD");
+            if (portId.isCurrentlyOwned()) System.out.println("IN USE IN CLOSE THREAD");
             connection = false;
             System.out.println("PORT CLOSED!!!! SUCCESS!!");
         }
@@ -417,37 +451,35 @@ public class ModemComm {
     }
 
     public synchronized String getModemResponse() {
-        if(connection==false) return null;
+        if (connection == false) return null;
         while (!flag) {
             if (modemResponse.endsWith("OK")) break;
-            if (finalAnswer.contains("ERROR")) break;
+            if (modemResponse.contains("ERROR")) break;
+            if (modemResponse.contains("NOT SUPPORT")) break;
         }
         flag = false;
         return modemResponse;
     }
 
     public void enablePhonebookMemoryStore() {
-        if(connection==false) return;
+        if (connection == false) return;
         writeCommandToModem(messageSelectPhonebookMemoryStorage);
     }
 
     public void writePhoneNumber() {
-        if(connection==false) return;
+        if (connection == false) return;
         int type = Integer.valueOf(JOptionPane.showInputDialog("Write type of number:\n 145 - number dont have + \n 129 - number have + ", 145));
         phoneNumber = JOptionPane.showInputDialog("Write phone number: \n");
         String text = JOptionPane.showInputDialog("User alias/name:");
         phoneBookUserNumber = Integer.valueOf(JOptionPane.showInputDialog("Write user number ID:", 1));
         String mesWritePhonebook = messageWritePhonebook += phoneBookUserNumber + ",\"" + phoneNumber + "\"," + type + ",\"" + text + "\"" + CR;
-
         writeCommandToModem(mesWritePhonebook);
     }
 
     public void clearNumber() {
-        if(connection==false) return;
+        if (connection == false) return;
         writeCommandToModem(messageSelectPhonebookMemoryStorage);
-
         phoneBookUserNumber = Integer.valueOf(JOptionPane.showInputDialog("Write user number ID to clear:", 1));
-
         writeCommandToModem("AT+CPBW=" + phoneBookUserNumber + CR);
     }
 
@@ -456,7 +488,6 @@ public class ModemComm {
     }
 
     public void setSerialNumberFromInput() {
-        //this.serialNumber = IMSI;
         this.serialNumber = modemResponse.replaceAll("[^0-9?!\\.]", "");
     }
 
@@ -465,16 +496,17 @@ public class ModemComm {
     }
 
     public String checkSecurity(String security) {
-        if(connection==false) return null;
+        if (connection == false) return null;
 
+        String compare = "\nSIM security in database: \nPIN1 " + Pin1Number + "\tPIN2 " + Pin2Number + "\nPUK1 " + Puk1Number + "\tPUK2 " + Puk2Number;
         PIN = null;
         PUK = null;
         String result = "";
 
         if (security.contains(String.valueOf(SIMSecurity.READY))) {
             result = String.valueOf(SIMSecurity.READY) + "\n";
-            PIN = "PIN  -  ";
-            PUK = "PUK  -  ";
+            PIN = "PIN  NULL  ";
+            PUK = "PUK  NULL  ";
         }
         if (security.contains(String.valueOf("SIM " + SIMSecurity.PIN + " "))) {
             result = String.valueOf(SIMSecurity.PIN) + "\n";
@@ -494,33 +526,33 @@ public class ModemComm {
             if (PUK != null && !PUK.equals("PUK  -  ")) PUK += ", SIM PUK2";
             PUK = "SIM PUK2";
         }
-        return "\n" + PIN + " \n" + PUK;
+        return compare + "\nIn SIM Card: \n" + PIN + " \n" + PUK;
     }
 
     public void getModemInfo() {
-        if(connection==false) return;
+        if (connection == false) return;
         writeCommandToModem(messageModemId);
     }
 
     public void readSimCardSerialNumber() {
-        if(connection==false) return;
+        if (connection == false) return;
         writeCommandToModem(messageIMSI);
     }
 
     public void readSecurity() {
-        if(connection==false) return;
+        if (connection == false) return;
         PIN = null;
         PUK = null;
         writeCommandToModem(messageAskPIN);
     }
 
     public void writeCommand(String command) {
-        if(connection==false) return;
+        if (connection == false) return;
         writeCommandToModem(command + CR);
     }
 
     public void checkNumbersOnSIM() {
-        if(connection==false) return;
+        if (connection == false) return;
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageCheckNumbers)));
         t1.start();
         try {
@@ -528,12 +560,11 @@ public class ModemComm {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        //if (finalAnswer.contains("ERROR")) flag = true;
     }
 
     public String checkLTE() {
 
-        if(connection==false) return null;
+        if (connection == false) return null;
         Thread t1 = (new Thread(new SerialWriter(outputStream, messageLTE)));
         t1.start();
         try {
@@ -542,25 +573,26 @@ public class ModemComm {
             e.printStackTrace();
         }
 
+
         String result;
-        if(finalAnswer.contains("LTE")) result = finalAnswer;
+        if (modemResponse.contains("LTE")) result = modemResponse;
         else result = this.getModemResponse();
 
         if (portId == null) return "Lte Status: NULL";
         if (result.contains("6,\"LTE\"")) return new String("LTE - Full Supported");
         else if (result.contains("101,\"LTE\"")) return new String("LTE - Sub-mode Supported");
-        else return new String("LTE - Not Supported");
+        else return new String("LTE - Not Supported or NO info");
     }
 
     public void checkPDPContext() {
-        if(connection==false) return;
+        if (connection == false) return;
         writeCommandToModem(messageAskPDPContext);
 
     }
 
     public String messageIP() {
-        if(connection==false) return null;
-        String result = finalAnswer;
+        if (connection == false) return null;
+        String result = modemResponse;
         if (result.contains("1,1")) {
             Thread t2 = new Thread(new SerialWriter(outputStream, messageIP));
             t2.start();
@@ -569,13 +601,13 @@ public class ModemComm {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return finalAnswer;
+            return modemResponse;
         }
         return null;
     }
 
     public boolean disconnect() {
-        if(connection==false) return true;
+        if (connection == false) return true;
 
         if (this.serialPort != null) {
             this.serialPort.notifyOnDataAvailable(false);
@@ -590,24 +622,18 @@ public class ModemComm {
 
         System.out.println("After stream");
         new CloseThread().start();
-
-        if (portId.isCurrentlyOwned()) {
-            System.out.println(portId + " in use!");
-            connection = true;
-            return false;
-        }
-
         return true;
     }
 
-    public void setInternetApn(){
+    public void setInternetApn() {
         apn_version = APN_Version.APN_Internet;
     }
 
     public ModemComm() {
         getAllPorts();
-        apn_version = APN_Version.APN_database;
-
+        //apn_version = APN_Version.APN_database;
+        apn_version = APN_Version.APN_Internet;
+        answer = false;
     }
 
 }

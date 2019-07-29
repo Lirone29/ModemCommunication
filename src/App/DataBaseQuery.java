@@ -40,11 +40,6 @@ public class DataBaseQuery {
             "               ,[invoicing_period]\n" +
             "FROM [Billingi].[dbo].[t_simcard]";
 
-/*
-    volatile String IPAddrQuery = "SELECT [Billingi].[dbo].[t_simcard].ip_addr\n" +
-            "FROM [Billingi].[dbo].[t_simcard]\n" +
-            "WHERE [Billingi].[dbo].[t_simcard].[serial_number] = '" + serialNumber + "';";
-*/
 
     String IPAddrQuery = "SELECT [Billingi].[dbo].[t_simcard].ip_addr\n" +
             "FROM [Billingi].[dbo].[t_simcard]\n" +

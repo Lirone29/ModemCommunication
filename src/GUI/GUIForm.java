@@ -48,15 +48,15 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     MyThread thread;
 
     boolean threatStatus = false;
-    int timeout = 100;
+    int timeout = 2000;
 
     public class MyThread extends Thread {
 
-        public void run(){
-            threatStatus=true;
-            while(threatStatus){
-                CSQLabel.setText("CSQ: "+modemComm.getCSQ());
-                IpLabel.setText("IP " + modemComm.getIP());
+        public void run() {
+            threatStatus = true;
+            while (threatStatus) {
+                CSQLabel.setText("CSQ: " + modemComm.getCSQ());
+                IpLabel.setText("IP: " + modemComm.checkIPAddr());
 
                 try {
                     this.sleep(timeout);
@@ -68,13 +68,13 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     }
 
     public void setSecurity() {
-        if(con.isConnectionStatus()==true && modemComm.connect()==true){
+        if (con.isConnectionStatus() == true && modemComm.getConnection() == true) {
             try {
                 modemComm.setAPN(con.getAPN());
-                modemComm.setPin1Number(Integer.valueOf(con.getPin1()));
-                modemComm.setPin2Number(Integer.valueOf(con.getPin2()));
-                modemComm.setPuk1Number(Integer.valueOf(con.getPuk1()));
-                modemComm.setPuk2Number(Integer.valueOf(con.getPuk2()));
+                modemComm.setPin1Number(con.getPin1());
+                modemComm.setPin2Number(con.getPin2());
+                modemComm.setPuk1Number(con.getPuk1());
+                modemComm.setPuk2Number(con.getPuk2());
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -86,10 +86,10 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
         setResizable(true);
         setContentPane(panelGUI);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
+        threatStatus = false;
         modemComm = new ModemComm();
         serialPortList = modemComm.getAllSerialPorts();
-
+        thread = new MyThread();
 
         for (int i = 0; i < serialPortList.size(); i++) {
             serialPortComboBox.addItem(serialPortList.get(i));
@@ -122,25 +122,28 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     public void actionPerformed(ActionEvent e) {
         Object a = e.getSource();
 
-        if(a==executeButton) {
+        if (a == executeButton) {
             if (!this.commandTextField.getText().equals("")) {
                 modemComm.writeCommand(this.commandTextField.getText());
-                this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
+                this.modemTextArea.setText("" + modemComm.getModemResponse());
             }
-        }else if (a==clearButton) {
+        } else if (a == clearButton) {
             this.modemTextArea.setText("");
             this.commandTextField.setText("");
 
-        }else if(a==connectButton) {
+        } else if (a == connectButton) {
             this.modemTextArea.setText("");
+            connection = modemComm.getConnection();
+
             if (connection == false) {
                 portName = serialPortComboBox.getSelectedItem().toString();
                 modemComm.setPortName(portName);
                 connection = modemComm.connect();
                 if (connection == true) {
                     this.modemLabel.setText("Modem: CONNECTED, " + portName);
+                    modemComm.turnSpamOff();
                     this.lteLabel.setText(modemComm.checkLTE());
-                    if(con.isConnectionStatus())thread.start();
+                    modemComm.getModemInfo();
                 } else {
                     this.modemLabel.setText("Modem Status: DISCONNECTED");
                     this.lteLabel.setText("Lte Status: NULL");
@@ -149,56 +152,54 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             } else {
                 JOptionPane.showMessageDialog(null, "App is already connected to serial port. \n Disconnect first to change port\n", "Connection Warning!", JOptionPane.INFORMATION_MESSAGE);
             }
-        }else if(a==compareIPAddressButton) {
+        } else if (a == compareIPAddressButton) {
+            if (con.isConnectionStatus() == false) {
+                this.modemTextArea.setText("NOT CONNECTED TO DATABASE!");
+                return;
+            }
             try {
                 dataBaseIp = con.getIP();
-                System.out.println(dataBaseIp);
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            modemComm.checkPDPContext();
-            this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
-            String modemIP = modemComm.messageIP();
-            if (!(modemIP == null)) {
-                this.modemTextArea.setText(this.modemTextArea.getText() + modemComm.getModemResponse());
-            }
-
+            String modemIP = modemComm.getIPAddress();
             if (dataBaseIp.equals(modemIP))
-                this.modemTextArea.setText(this.modemTextArea.getText() + "\n------------------------------------------\nThe same IP address: \n" + modemIP);
+                this.modemTextArea.setText("The same IP address: \n" + modemIP);
             else
-                this.modemTextArea.setText(this.modemTextArea.getText() + "\n------------------------------------------\nIP Addres: \nDataBase IP: " + dataBaseIp + "\nModem IP: " + modemIP);
+                this.modemTextArea.setText("IP Addres: \nDataBase IP: " + dataBaseIp + "\nModem IP: " + modemIP);
 
-        }else if(a== serialPortComboBox) {
+        } else if (a == serialPortComboBox) {
             portName = serialPortComboBox.getSelectedItem().toString();
 
-        }else if(a==checkSIMSecurityButton) {
+        } else if (a == checkSIMSecurityButton) {
             //Reads how secured is SIM
+            setSecurity();
             modemComm.readSecurity();
             this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
             this.modemTextArea.setText(modemTextArea.getText() + "\n------------------------------------------" + modemComm.checkSecurity(modemTextArea.getText()));
 
-        }else if(a== getSerialNumberButton) {
+        } else if (a == getSerialNumberButton) {
             modemComm.readSimCardSerialNumber();
             this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
             modemComm.setSerialNumberFromInput();
 
-        }else if(a==modemInfoButton) {
+        } else if (a == modemInfoButton) {
             modemComm.getModemInfo();
             this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
 
-        }else if (a== clearNumberButton) {
+        } else if (a == clearNumberButton) {
             modemComm.clearNumber();
             this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
 
-        }else if (a == writeNumberButton) {
+        } else if (a == writeNumberButton) {
             modemComm.enablePhonebookMemoryStore();
             modemComm.writePhoneNumber();
-            this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
+            this.modemTextArea.setText("" + modemComm.getModemResponse());
 
-        }else if(a== displaySIMNumberButton) {
+        } else if (a == displaySIMNumberButton) {
             modemComm.checkNumbersOnSIM();
-            this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
-        }else if(a== DBConnectButton) {
+            this.modemTextArea.setText("" + modemComm.getModemResponse());
+        } else if (a == DBConnectButton) {
 
             if (modemComm.getSerialNumber() == null) {
                 modemComm.readSimCardSerialNumber();
@@ -219,41 +220,49 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
 
             con.connect();
 
-            if(threatStatus==false && con.isConnectionStatus() && modemComm.connect()){
-                thread.start();
-            }
-
             if (con.isConnectionStatus()) SQLLabel.setText("DataBase: CONNECTED!");
             else SQLLabel.setText("DataBase: DISCONNECTED!");
 
-        }else if(a==disconnectButton){
+            String resultTMP = modemComm.getIP();
+
+            if (threatStatus == false && con.isConnectionStatus() && modemComm.getConnection()) {
+                //System.out.println("INN");
+                if (resultTMP != null) thread.start();
+                else resultTMP = modemComm.getIP();
+            }
+
+        } else if (a == disconnectButton) {
             connection = modemComm.disconnect();
             threatStatus = false;
 
-            try {
-                con.closeConnection();
-                thread.join();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }catch (InterruptedException ex) {
-                ex.printStackTrace();
+            if (con != null) {
+                try {
+                    con.closeConnection();
+                    thread.join();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+
             }
 
-            if (connection == true){
+            if (connection = modemComm.getConnection()) {
                 this.modemLabel.setText("Modem: CONNECTED ," + portName);
-                this.lteLabel.setText(modemComm.checkLTE());
-                setSecurity();
-            }
-            else{
+                //this.lteLabel.setText(modemComm.checkLTE());
+            } else {
                 this.modemLabel.setText("Modem Status: DISCONNECTED");
                 this.lteLabel.setText("Lte Status: NULL");
+                this.IpLabel.setText("IP: NULL");
+                this.CSQLabel.setText("CSQ: NULL");
             }
+
         }
 
     }
 
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         new GUIForm("Modem Communication App");
     }
 
