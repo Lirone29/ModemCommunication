@@ -38,15 +38,20 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     private JLabel CSQLabel;
     private JLabel IpLabel;
     private JLabel ModemDataLabel;
+    private JLabel APNLabel;
+    private JButton APNButton;
+    private JButton wirelessButton;
 
-    boolean connection = false;
+
     ModemComm modemComm;
     MySQLConnection con;
-    String portName = "";
-    String dataBaseIp = "";
     ArrayList<String> serialPortList;
     MyThread thread;
 
+    String portName = "";
+    String dataBaseIp = "";
+
+    boolean connection = false;
     boolean threatStatus = false;
     int timeout = 2000;
 
@@ -70,7 +75,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     public void setSecurity() {
         if (con.isConnectionStatus() == true && modemComm.getConnection() == true) {
             try {
-                modemComm.setAPN(con.getAPN());
+                modemComm.setFromDatabaseAPN(con.getAPN());
                 modemComm.setPin1Number(con.getPin1());
                 modemComm.setPin2Number(con.getPin2());
                 modemComm.setPuk1Number(con.getPuk1());
@@ -113,6 +118,8 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
         modemInfoButton.addActionListener(this);
         DBConnectButton.addActionListener(this);
         disconnectButton.addActionListener(this);
+        APNButton.addActionListener(this);
+        wirelessButton.addActionListener(this);
 
         pack();
         setVisible(true);
@@ -140,9 +147,9 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                 modemComm.setPortName(portName);
                 connection = modemComm.connect();
                 if (connection == true) {
-                    this.modemLabel.setText("Modem: CONNECTED, " + portName);
+                    this.modemLabel.setText("Modem: CON - " + portName);
                     modemComm.turnSpamOff();
-                    //this.lteLabel.setText(modemComm.checkLTE());
+                    this.lteLabel.setText(modemComm.checkLTE());
                     modemComm.getModemInfo();
                 } else {
                     this.modemLabel.setText("Modem Status: DISCONNECTED");
@@ -172,7 +179,6 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             portName = serialPortComboBox.getSelectedItem().toString();
 
         } else if (a == checkSIMSecurityButton) {
-            //Reads how secured is SIM
             setSecurity();
             modemComm.readSecurity();
             this.modemTextArea.setText("" + modemComm.getModemResponse().replaceFirst("\n", ""));
@@ -214,9 +220,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             }
 
             String configureConnection = JOptionPane.showInputDialog("Do you want to configure connection? [Yes/No]", "No");
-            if (configureConnection.contains("Yes") || configureConnection.contains("yes") || configureConnection.contains("Y")) {
-                con.configureConnection();
-            }
+            if (configureConnection.contains("Yes") || configureConnection.contains("yes") || configureConnection.contains("Y")) { con.configureConnection(); }
 
             con.connect();
 
@@ -224,9 +228,9 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             else SQLLabel.setText("DataBase: DISCONNECTED!");
 
             String resultTMP = modemComm.getIP();
+            this.APNLabel.setText("APN: " + modemComm.getAPN());
 
             if (threatStatus == false && con.isConnectionStatus() && modemComm.getConnection()) {
-                //System.out.println("INN");
                 if (resultTMP != null) thread.start();
                 else resultTMP = modemComm.getIP();
             }
@@ -244,10 +248,9 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
-
             }
 
-            if (connection = modemComm.getConnection()) {
+            if ((connection = modemComm.getConnection())==true) {
                 this.modemLabel.setText("Modem: CONNECTED ," + portName);
                 //this.lteLabel.setText(modemComm.checkLTE());
             } else {
@@ -257,6 +260,11 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                 this.CSQLabel.setText("CSQ: NULL");
             }
 
+        }else if(a == APNButton) {
+            modemComm.getIP();
+            this.APNLabel.setText("APN: " + modemComm.getAPN());
+        }else if(a== wirelessButton){
+            String label = modemComm.changeWirelessComm();
         }
 
     }
@@ -265,8 +273,6 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     public static void main(String[] args) {
         String path = System.getProperty("user.dir");
         System.setProperty("java.library.path.dir",path+"\\lib");
-        System.out.println(path+"\\lib");
-
         new GUIForm("Modem Communication ModemComm.GUI.App");
     }
 
