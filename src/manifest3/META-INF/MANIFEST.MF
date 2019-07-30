@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Class-Path: lib/RXTXcomm.jar lib/mssql-jdbc-7.2.2.jre8.jar lib/mssql-jdbc-7.2.2.jr
+ e11.jar
+Main-Class: ModemComm.GUIForm
+

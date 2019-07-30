@@ -1,4 +1,4 @@
-package App;
+package ModemComm.App;
 
 public class DataBaseQuery {
     public String serialNumber = "";

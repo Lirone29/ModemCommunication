@@ -1,9 +1,8 @@
-package App;
+package ModemComm.App;
 
 import javax.swing.*;
 import java.sql.*;
 import java.util.Enumeration;
-
 
 public class MySQLConnection {
 
@@ -110,6 +109,7 @@ public class MySQLConnection {
 
     public void connect() {
         try {
+            //Class.forName(com.microsoft.sqlserver.jdbc.SQLServerDriver.class.toString());
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             String url = "jdbc:sqlserver://" + serwerIP;
             con = DriverManager.getConnection(url, user, password);
@@ -124,12 +124,12 @@ public class MySQLConnection {
 
     public MySQLConnection(String tmpSerialNumber) throws SQLException {
 
-        //this.serialNmber = tmpSerialNumber;
-        //dbQuery = new DataBaseQuery(tmpSerialNumber);
+        this.serialNmber = tmpSerialNumber;
+        dbQuery = new DataBaseQuery(tmpSerialNumber);
 
         //-----------FOR TESTS-----------------------
-        this.serialNmber = "9508828297039";
-        dbQuery = new DataBaseQuery("9508828297039");
+        //this.serialNmber = "9508828297039";
+        //dbQuery = new DataBaseQuery("9508828297039");
 
     }
 }

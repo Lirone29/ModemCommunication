@@ -1,0 +1,24 @@
+<component name="ArtifactManager">
+  <artifact build-on-make="true" name="ModemCom4">
+    <output-path>$PROJECT_DIR$/out/artifacts/ModemCom4</output-path>
+    <properties id="ant-preprocessing">
+      <options enabled="true" />
+    </properties>
+    <root id="root">
+      <element id="archive" name="ModemCommunication.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/src/manifest3/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="ModemCommunication" />
+      </element>
+      <element id="library" level="project" name="i368-mingw32" />
+      <element id="directory" name="lib">
+        <element id="file-copy" path="C:/Program Files/Microsoft JDBC Driver 7.2 for SQL Server/sqljdbc_7.2/enu/mssql-jdbc-7.2.2.jre8.jar" />
+        <element id="file-copy" path="$USER_HOME$/JavaLibraries/rxtx-2.1-7-bins-r2/rxtx-2.1-7-bins-r2/RXTXcomm.jar" />
+      </element>
+      <element id="file-copy" path="$USER_HOME$/JavaLibraries/rxtx-2.1-7-bins-r2/rxtx-2.1-7-bins-r2/Windows/i368-mingw32/rxtxSerial.dll" />
+      <element id="file-copy" path="$USER_HOME$/JavaLibraries/Microsoft JDBC Driver 7.2 for SQL Server/sqljdbc_7.2/enu/auth/x86/sqljdbc_auth.dll" />
+      <element id="file-copy" path="$USER_HOME$/JavaLibraries/Microsoft JDBC Driver 7.2 for SQL Server/sqljdbc_7.2/enu/xa/x86/sqljdbc_xa.dll" />
+    </root>
+  </artifact>
+</component>

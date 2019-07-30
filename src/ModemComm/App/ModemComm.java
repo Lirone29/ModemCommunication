@@ -1,4 +1,4 @@
-package App;
+package ModemComm.App;
 
 
 import gnu.io.*;
@@ -113,10 +113,15 @@ public class ModemComm {
     //GOOD
     public String getCSQ() {
         writeCommandToModem(messageCSQ);
+        //String result = getModemResponse();
         String result = modemResponse;
-        if (!result.contains("CSQ")) result = getModemResponse();
+        if (!result.contains("CSQ:")){
+            while(!result.contains("CSQ:"))
+                result = getModemResponse();
+        }
         String[] result2 = result.split(":");
-        result = result2[1].replaceAll("OK", "");
+        result = (result2[1].replaceAll("OK", ""));
+        //System.out.println(result);
         return result;
     }
 
@@ -127,19 +132,12 @@ public class ModemComm {
             result = getModemResponse();
             if (result.contains("ERROR")) return null;
         } while (!result.contains("CGPADDR:"));
-        setIPAddress(result);
-        return IP;
+        String[] value = result.split("\"");
+        return (IP = value[1]);
     }
 
     public boolean getConnection() {
         return connection;
-    }
-
-    public void setIPAddress(String tmp) {
-        String[] value = tmp.split("\"");
-        String result = value[1];
-        System.out.println(result);
-        IP = result;
     }
 
     public String getIPAddress() {
@@ -202,13 +200,13 @@ public class ModemComm {
 
                     writeCommandToModem(messageAttachGPRSService);
                     result = getModemResponse();
-                    while (!result.contains(messageAttachGPRSService.trim())) {
-                        result = getModemResponse();
-                    }
+                   // while (!result.contains(messageAttachGPRSService.trim())) {
+                    //    result = getModemResponse();
+                    //}
 
                     writeCommandToModem(messageDefineContext + internetAPN + "\"" + CR);
                     result = getModemResponse();
-                    result = getModemResponse();
+                    //result = getModemResponse();
                     //writeCommandToModem(messageDefineContext + internetAPN + "ppp\"" + CR);
 
                     writeCommandToModem(messageAskPDPContext);
@@ -217,9 +215,8 @@ public class ModemComm {
                     } while (!result.contains("1,1"));
 
                     writeCommandToModem(messageAttachContext);
-                    result = getModemResponse();
+                    //result = getModemResponse();
                     result = checkIPAddr();
-                    //System.out.println(result);
                 }
                 break;
             }
@@ -429,9 +426,9 @@ public class ModemComm {
         public synchronized void run() {
             serialPort.close();
             serialPort.removeEventListener();
-            if (portId.isCurrentlyOwned()) System.out.println("IN USE IN CLOSE THREAD");
+            if (portId.isCurrentlyOwned()) System.out.println("CL Port In Use!");
             connection = false;
-            System.out.println("PORT CLOSED!!!! SUCCESS!!");
+            System.out.println("PORT CLOSED!");
         }
     }
 
@@ -620,7 +617,7 @@ public class ModemComm {
             }
         }
 
-        System.out.println("After stream");
+        //System.out.println("After stream");
         new CloseThread().start();
         return true;
     }

@@ -1,7 +1,7 @@
-package GUI;
+package ModemComm;
 
-import App.ModemComm;
-import App.MySQLConnection;
+import ModemComm.App.ModemComm;
+import ModemComm.App.MySQLConnection;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,7 +41,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
 
     boolean connection = false;
     ModemComm modemComm;
-    App.MySQLConnection con;
+    MySQLConnection con;
     String portName = "";
     String dataBaseIp = "";
     ArrayList<String> serialPortList;
@@ -142,7 +142,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                 if (connection == true) {
                     this.modemLabel.setText("Modem: CONNECTED, " + portName);
                     modemComm.turnSpamOff();
-                    this.lteLabel.setText(modemComm.checkLTE());
+                    //this.lteLabel.setText(modemComm.checkLTE());
                     modemComm.getModemInfo();
                 } else {
                     this.modemLabel.setText("Modem Status: DISCONNECTED");
@@ -150,7 +150,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                 }
 
             } else {
-                JOptionPane.showMessageDialog(null, "App is already connected to serial port. \n Disconnect first to change port\n", "Connection Warning!", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "ModemComm.GUI.App is already connected to serial port. \n Disconnect first to change port\n", "Connection Warning!", JOptionPane.INFORMATION_MESSAGE);
             }
         } else if (a == compareIPAddressButton) {
             if (con.isConnectionStatus() == false) {
@@ -263,7 +263,11 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
 
 
     public static void main(String[] args) {
-        new GUIForm("Modem Communication App");
+        String path = System.getProperty("user.dir");
+        System.setProperty("java.library.path.dir",path+"\\lib");
+        System.out.println(path+"\\lib");
+
+        new GUIForm("Modem Communication ModemComm.GUI.App");
     }
 
 }

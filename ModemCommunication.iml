@@ -7,9 +7,26 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="i368-mingw32" level="project" />
-    <orderEntry type="library" name="RXTXcomm" level="project" />
-    <orderEntry type="library" name="mssql-jdbc-7.2.2.jre8" level="project" />
-    <orderEntry type="library" name="jgoodies-common-1.4.0" level="project" />
+    <orderEntry type="library" exported="" name="i368-mingw32" level="project" />
+    <orderEntry type="library" exported="" name="RXTXcomm" level="project" />
+    <orderEntry type="library" exported="" name="mssql-jdbc-7.2.2.jre8" level="application" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/JavaLibraries/rxtx-2.1-7-bins-r2/rxtx-2.1-7-bins-r2/RXTXcomm.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/JavaLibraries/Microsoft JDBC Driver 7.2 for SQL Server/sqljdbc_7.2/enu/mssql-jdbc-7.2.2.jre8.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
