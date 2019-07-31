@@ -24,8 +24,8 @@ public class ModemComm {
         PUK2,
     }
 
-    Object[] options = {"Internet", "cellbox.pl", "imgw.pl", "public cellbox", "intermobile.pl", "aquard.pl", "telemeria.pl", "m2m.plusgsm.pl"};
-    Object[] networkOptions = {"0-GSM", "1-GMS Compact", "2-UTRAN", "3-GSM w/EGPRS", "4-UTRAN w/HSDPA", "5-UTRAN w/HSUPA", "6-UTRAN w/HSDPA", "7-E-UTRAN"};
+    Object[] options = {"Internet", "cellbox.pl", "Write own APN","imgw.pl", "public cellbox", "intermobile.pl", "aquard.pl", "telemeria.pl", "m2m.plusgsm.pl"};
+    Object[] networkOptions = {"0-2G: GSM", "1-2G: GMS Compact", "2-3G: UTRAN", "3-2G: GSM w/EGPRS", "4-3G: UTRAN w/HSDPA", "5-3G: UTRAN w/HSUPA ", "6-3G: UTRAN w/HSDPA and HSUPA", "7-LTE: E~UTRAN"};
     boolean connection = false;
     public static boolean flag = false;
     static Enumeration<CommPortIdentifier> portList;
@@ -54,7 +54,7 @@ public class ModemComm {
 
     String userAPN,passwordAPN  = "INTERNET";
 
-    String IP,CSQ,operator,wirelessComm = null;
+    String IP,CSQ,operator,wirelessComm, wirelessCommLabel = null;
     String fileName = "APN History";
 
     //Messages:
@@ -62,11 +62,15 @@ public class ModemComm {
     static String messageModemId = "ATI" + CR;
     static String messageCheckPIN = "AT+CPIN?" + CR;
     static String messageCheckPDPContext = "AT+CGACT?" + CR;
+    //static String messageActivatePDPContext = "AT+CGACT=1,1" + CR;
     static String messageIP = "AT+CGPADDR=1" + CR;
     static String messageWritePIN = "AT+CPIN=";
 
     String messageCheckOperator = "AT+COPS?" + CR;
-    String messageChangeWirelessComm = "AT+COPS=1,0" + CR;
+
+    String messageDetachContext = "AT+CGACT=0,1" + CR;
+
+    String messageChangeWirelessComm = "AT+COPS=1,0";
     String messageTurnOffPeriodic = "AT^CURC=0" + CR;
     String messageAttachGPRSService = "AT+CGATT=1" + CR;
     String messageAttachContext = "AT+CGACT=1" + CR;
@@ -101,6 +105,10 @@ public class ModemComm {
         return APN;
     }
 
+    public String getWirelessCommLabel() {
+        return wirelessCommLabel;
+    }
+
     public void turnSpamOff() {
         writeCommandToModem(messageTurnOffPeriodic);
     }
@@ -121,14 +129,30 @@ public class ModemComm {
         return result;
     }
 
-    public String checkIPAddr() {
+    public synchronized String checkIPAddr() {
+        //System.out.println("In Check IP Addr");
         String result = null;
         writeCommandToModem(messageIP);
-        do {
+        result = modemResponse;
+
+        if (result==null){
+            writeCommandToModem(messageIP);
+            result = modemResponse;
+        }
+
+        while (!result.contains("+CGPADDR:")){
             result = getModemResponse();
             if (result.contains("ERROR")) return null;
-        } while (!result.contains("CGPADDR:"));
+        }
+
+        //System.out.println("After loop in IP Addr");
+        if(!result.contains("\"")) {
+            IP="NULL";
+            return "NULL";
+        }
+
         String[] value = result.split("\"");
+        IP = value[1];
         return (IP = value[1]);
     }
 
@@ -140,13 +164,13 @@ public class ModemComm {
         return IP;
     }
 
-    public String getIP() {
-        String result = "";
-        if (answer == false) answer = unlockPIN();
-        Object selectedValue = JOptionPane.showInputDialog(null, "Choose APN to check IP", "Connect to APN",
-                JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
-        APN = selectedValue.toString();
+    //IF APN OR WIrelessConn IS Changed
+    public String changeIP(){
 
+        //System.out.println("IN Change IP");
+        writeCommandToModem(messageDetachContext);
+
+        String result = "";
         writeCommandToModem(messageEnableRegistration);
         do {
             result = getModemResponse();
@@ -162,16 +186,66 @@ public class ModemComm {
         writeCommandToModem(messageAttachGPRSService);
         result = getModemResponse();
 
-        writeCommandToModem(messageDefineContext + selectedValue + "\"" + CR);
-        result = getModemResponse();
-
-        writeCommandToModem(messageCheckPDPContext);
-        do {
-            result = getModemResponse();
-        } while (!result.contains("1,1"));
+        writeCommandToModem(messageDefineContext + APN + "\"" + CR);
+        result = modemResponse;
+        if(!result.contains("+CGDCONT"))result = getModemResponse();
 
         writeCommandToModem(messageAttachContext);
-        return (result = checkIPAddr());
+        result = checkIPAddr();
+        return result;
+    }
+
+    public String getIP() {
+        String result = "";
+        if (answer == false) answer = unlockPIN();
+        Object selectedValue = JOptionPane.showInputDialog(null, "Choose APN to check IP", "Connect to APN",
+                JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+        APN = selectedValue.toString();
+
+        if(APN.contains("Write own APN")){
+            APN= JOptionPane.showInputDialog("Please input APN value: ");
+        }
+
+        writeCommandToModem(messageCheckOperator);
+
+        result = modemResponse;
+        while (!result.contains("+COPS:")) {
+            result = getModemResponse();
+        }
+
+        String values[] = result.split(",");
+        operator = values[2].trim();
+        wirelessComm = values[3].replace("OK", "").trim();
+
+        for(int i = 0; i < networkOptions.length; i++)
+            if(i == Integer.parseInt(wirelessComm)) wirelessCommLabel = (networkOptions[i].toString()).split("-")[1];
+
+        writeCommandToModem(messageEnableRegistration);
+        do {
+            result = getModemResponse();
+            if (result.contains("ERROR")) break;
+        } while (!(result.contains(messageEnableRegistration.trim())));
+
+        do {
+            writeCommandToModem(messageCheckNetworkRegistration);
+            result = getModemResponse();
+            if (result.contains("ERROR")) break;
+        } while (!result.contains("1,1"));
+
+        writeCommandToModem(messageAttachGPRSService);
+        result = modemResponse;
+
+        //System.out.println("4th");
+        writeCommandToModem(messageDefineContext + selectedValue + "\"" + CR);
+        result = modemResponse;
+        if(!result.contains("+CGDCONT"))result = getModemResponse();
+
+        //System.out.println("5th");
+        writeCommandToModem(messageAttachContext);
+        //System.out.println("6th");
+        result = modemResponse;
+        //result = checkIPAddr();
+        return result;
     }
 
     public boolean unlockPIN() {
@@ -444,10 +518,10 @@ public class ModemComm {
         writeCommandToModem(messageDefineContext + internetAPN + "\"" + CR);
         result = getModemResponse();
 
-        writeCommandToModem(messageCheckPDPContext);
-        do {
-            result = getModemResponse();
-        } while (!result.contains("1,1"));
+        //writeCommandToModem(messageCheckPDPContext);
+        //do {
+        //    result = getModemResponse();
+        //} while (!result.contains("1,1"));
 
         writeCommandToModem(messageAttachContext);
         result = checkIPAddr();
@@ -521,21 +595,53 @@ public class ModemComm {
 
     public String changeWirelessComm() {
         String result = " ";
+        String oldWirelessComm = wirelessComm;
+        String oldWirelessCommLabel = wirelessCommLabel;
+
+        //detachnig context to enable change!!
+        writeCommandToModem(messageDetachContext);
+
+        //System.out.println("In wireless 1");
+
         writeCommandToModem(messageCheckOperator);
+        result = modemResponse;
+
+        //System.out.println("IN  wireless" + result);
+
+        if(result==null) {
+            writeCommandToModem(messageCheckOperator);
+            result = modemResponse;
+        }
+
         while (!result.contains("+COPS:")) {
+            //System.out.println("IN lool in wireless" + result);
+            writeCommandToModem(messageCheckOperator);
             result = getModemResponse();
         }
+
         String values[] = result.split(",");
-        operator = values[2];
+        operator = values[2].trim();
+
+        //System.out.println("In wireless 2");
 
         Object selectedValue = JOptionPane.showInputDialog(null, "Choose Wireless Connection", "Wireless Type of Connection",
                 JOptionPane.INFORMATION_MESSAGE, null, networkOptions, networkOptions[0]);
 
         String[] tmpWirelessComm = selectedValue.toString().split("-");
         wirelessComm = tmpWirelessComm[0];
+        wirelessCommLabel = tmpWirelessComm[1];
 
-        writeCommandToModem(messageChangeWirelessComm + operator + "," + wirelessComm);
-        result = getModemResponse();
+        writeCommandToModem(messageChangeWirelessComm + ","+ operator + "," + wirelessComm +CR);
+        result = modemResponse;
+
+        if(!result.contains("AT+COPS"))result = getModemResponse();
+        if(result.contains("ERROR")){
+            wirelessCommLabel = oldWirelessCommLabel;
+            wirelessComm = oldWirelessComm;
+            return result;
+        }
+
+        this.changeIP();
         return result;
 
     }

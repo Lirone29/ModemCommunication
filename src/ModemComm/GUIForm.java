@@ -41,7 +41,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     private JLabel APNLabel;
     private JButton APNButton;
     private JButton wirelessButton;
-
+    private JLabel wirelessLabel;
 
     ModemComm modemComm;
     MySQLConnection con;
@@ -53,21 +53,33 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
 
     boolean connection = false;
     boolean threatStatus = false;
-    int timeout = 2000;
+    boolean threadStop = false;
+    int timeout = 3000;
 
     public class MyThread extends Thread {
 
         public void run() {
             threatStatus = true;
             while (threatStatus) {
-                CSQLabel.setText("CSQ: " + modemComm.getCSQ());
-                IpLabel.setText("IP: " + modemComm.checkIPAddr());
+
+                while(threadStop == true){
+                    try {
+                        IpLabel.setText("IP: NULL");
+                        this.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 try {
                     this.sleep(timeout);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                CSQLabel.setText("CSQ: " + modemComm.getCSQ());
+                String IP = modemComm.checkIPAddr();
+                IpLabel.setText("IP: " + IP);
+
             }
         }
     }
@@ -229,6 +241,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
 
             String resultTMP = modemComm.getIP();
             this.APNLabel.setText("APN: " + modemComm.getAPN());
+            this.wirelessLabel.setText(modemComm.getWirelessCommLabel());
 
             if (threatStatus == false && con.isConnectionStatus() && modemComm.getConnection()) {
                 if (resultTMP != null) thread.start();
@@ -249,22 +262,24 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                     ex.printStackTrace();
                 }
             }
-
             if ((connection = modemComm.getConnection())==true) {
                 this.modemLabel.setText("Modem: CONNECTED ," + portName);
-                //this.lteLabel.setText(modemComm.checkLTE());
             } else {
                 this.modemLabel.setText("Modem Status: DISCONNECTED");
                 this.lteLabel.setText("Lte Status: NULL");
                 this.IpLabel.setText("IP: NULL");
                 this.CSQLabel.setText("CSQ: NULL");
             }
-
         }else if(a == APNButton) {
+            threadStop = true;
             modemComm.getIP();
             this.APNLabel.setText("APN: " + modemComm.getAPN());
+            threadStop = false;
         }else if(a== wirelessButton){
-            String label = modemComm.changeWirelessComm();
+            threadStop = true;
+            this.modemTextArea.setText("" + modemComm.changeWirelessComm());
+            wirelessLabel.setText(modemComm.getWirelessCommLabel());
+            threadStop = false;
         }
 
     }

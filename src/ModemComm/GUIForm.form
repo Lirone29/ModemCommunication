@@ -192,7 +192,11 @@
           <component id="1b9ad" class="javax.swing.JTextArea" binding="modemTextArea">
             <constraints/>
             <properties>
+              <alignmentX value="1.0"/>
+              <alignmentY value="1.0"/>
               <font name="DialogInput"/>
+              <lineWrap value="true"/>
+              <margin top="1" left="1" bottom="1" right="1"/>
               <maximumSize width="50" height="30"/>
               <minimumSize width="50" height="30"/>
               <preferredSize width="50" height="30"/>
@@ -372,7 +376,7 @@
         </constraints>
         <properties>
           <font name="Century Schoolbook" size="14" style="1"/>
-          <horizontalAlignment value="0"/>
+          <horizontalAlignment value="2"/>
           <horizontalTextPosition value="0"/>
           <preferredSize width="90" height="30"/>
           <text value="DataBase Status: NULL"/>
@@ -419,6 +423,21 @@
         <properties>
           <font name="Century Schoolbook" size="14" style="1"/>
           <text value=" APN: NULL"/>
+        </properties>
+      </component>
+      <component id="59616" class="javax.swing.JLabel" binding="wirelessLabel">
+        <constraints>
+          <grid row="2" column="3" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+            <minimum-size width="240" height="30"/>
+            <preferred-size width="240" height="30"/>
+            <maximum-size width="240" height="30"/>
+          </grid>
+        </constraints>
+        <properties>
+          <font name="Century Schoolbook" size="14" style="1"/>
+          <horizontalAlignment value="10"/>
+          <requestFocusEnabled value="true"/>
+          <text value="Wireless Conn: NULL"/>
         </properties>
       </component>
     </children>
