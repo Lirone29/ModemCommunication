@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
     boolean connection = false;
     boolean threatStatus = false;
     boolean threadStop = false;
-    int timeout = 3000;
+    int timeout = 2000;
 
     public class MyThread extends Thread {
 
@@ -76,6 +77,7 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 CSQLabel.setText("CSQ: " + modemComm.getCSQ());
                 String IP = modemComm.checkIPAddr();
                 IpLabel.setText("IP: " + IP);
@@ -239,13 +241,34 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             if (con.isConnectionStatus()) SQLLabel.setText("DataBase: CONNECTED!");
             else SQLLabel.setText("DataBase: DISCONNECTED!");
 
-            String resultTMP = modemComm.getIP();
+            String resultTMP = null;
+            try {
+                resultTMP = modemComm.getIP();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            System.out.println("Befor eid " + resultTMP);
             this.APNLabel.setText("APN: " + modemComm.getAPN());
             this.wirelessLabel.setText(modemComm.getWirelessCommLabel());
 
             if (threatStatus == false && con.isConnectionStatus() && modemComm.getConnection()) {
                 if (resultTMP != null) thread.start();
-                else resultTMP = modemComm.getIP();
+                else {
+                    try {
+                        resultTMP = modemComm.getIP();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    System.out.println("IN FI" +resultTMP);
+                    if (resultTMP != null) thread.start();
+                    else {
+                        try {
+                            resultTMP = modemComm.getIP();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
             }
 
         } else if (a == disconnectButton) {
@@ -272,13 +295,28 @@ public class GUIForm extends JFrame implements ActionListener, Serializable {
             }
         }else if(a == APNButton) {
             threadStop = true;
-            modemComm.getIP();
+            try {
+                modemComm.getIP();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
             this.APNLabel.setText("APN: " + modemComm.getAPN());
+            modemComm.detachConnection();
+            try {
+                modemComm.changeIP();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
             threadStop = false;
         }else if(a== wirelessButton){
             threadStop = true;
             this.modemTextArea.setText("" + modemComm.changeWirelessComm());
             wirelessLabel.setText(modemComm.getWirelessCommLabel());
+            try {
+                this.modemTextArea.setText(modemTextArea.getText() + " \n" + modemComm.changeIP());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
             threadStop = false;
         }
 

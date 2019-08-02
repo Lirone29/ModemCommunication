@@ -1,10 +1,9 @@
 package ModemComm.App;
 
 import gnu.io.*;
+
 import javax.swing.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -12,10 +11,6 @@ import java.util.TooManyListenersException;
 
 public class ModemComm {
 
-    public enum APN_Version {
-        APN_database,
-        APN_Internet,
-    }
     public enum SIMSecurity {
         READY, //no password
         PIN,
@@ -31,7 +26,6 @@ public class ModemComm {
     static Enumeration<CommPortIdentifier> portList;
     static ArrayList<String> serialPortList;
     static CommPortIdentifier portId;
-    APN_Version apn_version = APN_Version.APN_Internet;
     SerialReader reader;
     SerialPort serialPort;
     OutputStream outputStream;
@@ -43,8 +37,8 @@ public class ModemComm {
     static String modemResponse = "";
     volatile String modemPort = "COM13";
     public String serialNumber = null;
-    static String PIN, PUK = "";
-    static int phoneBookUserNumber = 1;
+    String PIN, PUK = "";
+    int phoneBookUserNumber = 1;
     String phoneNumber = "+48000000000";
     boolean answer = false;
     String databaseAPN = "";
@@ -52,6 +46,7 @@ public class ModemComm {
     public String APN = "";
     String internetAPN = "INTERNET";
 
+    boolean attached = false;
     String userAPN,passwordAPN  = "INTERNET";
 
     String IP,CSQ,operator,wirelessComm, wirelessCommLabel = null;
@@ -62,23 +57,20 @@ public class ModemComm {
     static String messageModemId = "ATI" + CR;
     static String messageCheckPIN = "AT+CPIN?" + CR;
     static String messageCheckPDPContext = "AT+CGACT?" + CR;
-    //static String messageActivatePDPContext = "AT+CGACT=1,1" + CR;
     static String messageIP = "AT+CGPADDR=1" + CR;
     static String messageWritePIN = "AT+CPIN=";
-
-    String messageCheckOperator = "AT+COPS?" + CR;
-
-    String messageDetachContext = "AT+CGACT=0,1" + CR;
-
-    String messageChangeWirelessComm = "AT+COPS=1,0";
-    String messageTurnOffPeriodic = "AT^CURC=0" + CR;
-    String messageAttachGPRSService = "AT+CGATT=1" + CR;
-    String messageAttachContext = "AT+CGACT=1" + CR;
-    String messageCSQ = "AT+CSQ" + CR;
-    String messageEnableRegistration = "AT+CREG=1" + CR;
-    String messageDefineContext = "AT+CGDCONT=1,\"IP\",\"";
-    String messageCheckNetworkRegistration = "AT+CREG?" + CR;
-
+    static String messageCheckOperator = "AT+COPS?" + CR;
+    static String messageDetachContext = "AT+CGACT=0,1" + CR;
+    static String messageChangeWirelessComm = "AT+COPS=1,0";
+    static String messageTurnOffPeriodic = "AT^CURC=0" + CR;
+    static String messageAttachGPRSService = "AT+CGATT=1" + CR;
+    static String messageDetachGPRSService = "AT+CGATT=0" + CR;
+    static String messageAttachContext = "AT+CGACT=1" + CR;
+    static String messageCSQ = "AT+CSQ" + CR;
+    static String messageEnableRegistration = "AT+CREG=1" + CR;
+    static String messageDefineContext = "AT+CGDCONT=1,\"IP\",\"";
+    static String messageCheckNetworkRegistration = "AT+CREG?" + CR;
+    static  String messageCheckStateOfContex = "AT+CGDCONT?" + CR;
     static String messageIMSI = "AT+CIMI" + CR;
     static String messageLTE = "AT^SYSINFOEX" + CR;
     static String messageCheckNumbersOnSIM = "AT+CNUM" + CR;
@@ -130,29 +122,23 @@ public class ModemComm {
     }
 
     public synchronized String checkIPAddr() {
-        //System.out.println("In Check IP Addr");
         String result = null;
+        modemResponse="";
         writeCommandToModem(messageIP);
-        result = modemResponse;
-
-        if (result==null){
-            writeCommandToModem(messageIP);
-            result = modemResponse;
-        }
+        result = getModemResponse();
 
         while (!result.contains("+CGPADDR:")){
+            writeCommandToModem(messageIP);
             result = getModemResponse();
             if (result.contains("ERROR")) return null;
         }
 
-        //System.out.println("After loop in IP Addr");
         if(!result.contains("\"")) {
             IP="NULL";
             return "NULL";
         }
 
         String[] value = result.split("\"");
-        IP = value[1];
         return (IP = value[1]);
     }
 
@@ -164,87 +150,167 @@ public class ModemComm {
         return IP;
     }
 
-    //IF APN OR WIrelessConn IS Changed
-    public String changeIP(){
-
-        //System.out.println("IN Change IP");
-        writeCommandToModem(messageDetachContext);
-
-        String result = "";
-        writeCommandToModem(messageEnableRegistration);
-        do {
-            result = getModemResponse();
-            if (result.contains("ERROR")) break;
-        } while (!(result.contains(messageEnableRegistration.trim())));
-
-        do {
-            writeCommandToModem(messageCheckNetworkRegistration);
-            result = getModemResponse();
-            if (result.contains("ERROR")) break;
-        } while (!result.contains("1,1"));
-
-        writeCommandToModem(messageAttachGPRSService);
+    public void detachConnection(){
+        String result="";
+        modemResponse = "";
+        writeCommandToModem("AT+CGACT=0,1"+CR);
         result = getModemResponse();
 
-        writeCommandToModem(messageDefineContext + APN + "\"" + CR);
-        result = modemResponse;
-        if(!result.contains("+CGDCONT"))result = getModemResponse();
+        modemResponse = "";
+        writeCommandToModem("AT+CGATT=0"+CR);
+        result = getModemResponse();
+        if(!result.contains("OK")) result = getModemResponse();
+    }
+    //IF APN OR WIrelessConn IS Changed
+    public String changeIP() throws IOException {
 
+        BufferedWriter writer = null;
+        int j = 0;
+        try {
+            writer = new BufferedWriter(new FileWriter("testChangeIP.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int i =0;
+        String result = "";
+
+        //detachConnection();
+
+        do {
+            modemResponse = "";
+            writeCommandToModem(messageEnableRegistration);
+            result = getModemResponse();
+            writer.write("\n"+(j++)+result);
+            if (result.contains("ERROR")) break;
+        } while (!(result.contains("AT+CREG")));
+
+        //System.out.println("#2 " + result);
+        do {
+            modemResponse = "";
+            writeCommandToModem(messageCheckNetworkRegistration);
+            result = getModemResponse();
+            writer.write("\n"+(j++)+result);
+            //if (result.contains("ERROR")) break;
+        } while (!result.contains("1,1"));
+
+        //System.out.println("#3 " + result);
+        do{
+            modemResponse = "";
+            writeCommandToModem(messageAttachGPRSService);
+            result = getModemResponse();
+            writer.write("\n" + (j++) + result);
+        } while (!result.contains("AT+CGATT"));
+
+        //System.out.println("#4 " + result);
+        modemResponse = "";
+        writeCommandToModem("AT+CGATT?"+CR);
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
+        //System.out.println("#5 " + result);
+        modemResponse = "";
+        writeCommandToModem(messageDefineContext + APN + "\"" + CR);
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
+        //System.out.println("#6 " + result);
+        modemResponse = "";
         writeCommandToModem(messageAttachContext);
-        result = checkIPAddr();
+        result = getModemResponse();
+        //System.out.println("#7 " + result);
+        writer.write("\n"+(j++)+result);
+        writer.close();
+
         return result;
     }
 
-    public String getIP() {
+    //---------------------getIPFUNCTION---------
+    public String getIP() throws IOException {
+
+        if(attached==true)detachConnection();
+
+        BufferedWriter writer = null;
+        int j = 0;
+        try {
+            writer = new BufferedWriter(new FileWriter("test1.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         String result = "";
         if (answer == false) answer = unlockPIN();
         Object selectedValue = JOptionPane.showInputDialog(null, "Choose APN to check IP", "Connect to APN",
                 JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
         APN = selectedValue.toString();
 
-        if(APN.contains("Write own APN")){
-            APN= JOptionPane.showInputDialog("Please input APN value: ");
-        }
+        if(APN.contains("Write own APN")){ APN= JOptionPane.showInputDialog("Please input APN value: "); }
 
         writeCommandToModem(messageCheckOperator);
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
 
-        result = modemResponse;
-        while (!result.contains("+COPS:")) {
+        while (!result.contains("+COPS:")){
+            writeCommandToModem(messageCheckOperator);
             result = getModemResponse();
+            writer.write("\n"+(j++)+result);
         }
 
         String values[] = result.split(",");
         operator = values[2].trim();
         wirelessComm = values[3].replace("OK", "").trim();
+        for(int i = 0; i < networkOptions.length; i++) if(i == Integer.parseInt(wirelessComm)) wirelessCommLabel = (networkOptions[i].toString()).split("-")[1];
 
-        for(int i = 0; i < networkOptions.length; i++)
-            if(i == Integer.parseInt(wirelessComm)) wirelessCommLabel = (networkOptions[i].toString()).split("-")[1];
-
+        modemResponse = "";
         writeCommandToModem(messageEnableRegistration);
-        do {
-            result = getModemResponse();
-            if (result.contains("ERROR")) break;
-        } while (!(result.contains(messageEnableRegistration.trim())));
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
 
         do {
+            modemResponse = "";
             writeCommandToModem(messageCheckNetworkRegistration);
             result = getModemResponse();
+            writer.write("\n"+(j++)+result);
             if (result.contains("ERROR")) break;
         } while (!result.contains("1,1"));
 
-        writeCommandToModem(messageAttachGPRSService);
-        result = modemResponse;
+        //System.out.println("2th " +result);
+        modemResponse = "";
 
-        //System.out.println("4th");
-        writeCommandToModem(messageDefineContext + selectedValue + "\"" + CR);
-        result = modemResponse;
-        if(!result.contains("+CGDCONT"))result = getModemResponse();
+        while (!result.contains("AT+CGATT")) {
+            writeCommandToModem(messageAttachGPRSService);
+            result = getModemResponse();
+            writer.write("\n" + (j++) + result);
+        }
 
-        //System.out.println("5th");
+        //System.out.println("3th");
+            modemResponse = "";
+        writeCommandToModem("AT+CGATT?"+CR);
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
+        //System.out.println("4th" + result);
+        modemResponse = "";
+        String a = messageDefineContext + selectedValue + "\"" + CR;
+        writeCommandToModem(a);
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
+        modemResponse = "";
+        //System.out.println("4.5th" +result);
         writeCommandToModem(messageAttachContext);
-        //System.out.println("6th");
-        result = modemResponse;
-        //result = checkIPAddr();
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
+        modemResponse = "";
+        //System.out.println("5th" + result);
+        writeCommandToModem(messageCheckStateOfContex);
+        result = getModemResponse();
+        writer.write("\n"+(j++)+result);
+
+        writer.close();
+        attached = true;
         return result;
     }
 
@@ -334,6 +400,7 @@ public class ModemComm {
         }
     }
 
+    //WriteCommanFunction
     public synchronized void writeCommandToModem(String command) {
         Thread t1 = new Thread(new SerialWriter(outputStream, command));
         t1.start();
@@ -347,7 +414,7 @@ public class ModemComm {
     //-------------Class to read modem response ----------------
     public static class SerialReader implements SerialPortEventListener {
         private InputStream in;
-        private byte[] buffer = new byte[1024];
+        private byte[] buffer = new byte[2048];
 
         public SerialReader(InputStream in) {
             this.in = in;
@@ -383,6 +450,7 @@ public class ModemComm {
                     }
                     modemResponse = new String(buffer, 0, len);
                     flag = true;
+
                 }
                 this.in.close();
             } catch (IOException e) {
@@ -457,15 +525,21 @@ public class ModemComm {
         }
     }
 
+    //-------------------getModemResponseFUNCTION
     public synchronized String getModemResponse() {
+        String result = modemResponse;
+        int i = 0;
         if (connection == false) return null;
-        while (!flag) {
-            if (modemResponse.endsWith("OK")) break;
-            if (modemResponse.contains("ERROR")) break;
-            if (modemResponse.contains("NOT SUPPORT")) break;
+        while (!flag ) {
+            if (result.endsWith("OK")) break;
+            if (result.contains("ERROR")) break;
+            if (result.contains("NOT SUPPORT")) break;
+            result = modemResponse;
+            i++;
+            if(i>200000000)break;
         }
         flag = false;
-        return modemResponse;
+        return result;
     }
 
     public void enablePhonebookMemoryStore() {
@@ -496,35 +570,6 @@ public class ModemComm {
 
     public void setSerialNumberFromInput() {
         this.serialNumber = modemResponse.replaceAll("[^0-9?!\\.]", "");
-    }
-
-    public void setInternetAPN() {
-        String result = "";
-        writeCommandToModem(messageEnableRegistration);
-        do {
-            result = getModemResponse();
-            if (result.contains("ERROR")) break;
-        } while (!(result.contains(messageEnableRegistration.trim())));
-
-        do {
-            writeCommandToModem(messageCheckNetworkRegistration);
-            result = getModemResponse();
-            if (result.contains("ERROR")) break;
-        } while (!result.contains("1,1"));
-
-        writeCommandToModem(messageAttachGPRSService);
-        result = getModemResponse();
-
-        writeCommandToModem(messageDefineContext + internetAPN + "\"" + CR);
-        result = getModemResponse();
-
-        //writeCommandToModem(messageCheckPDPContext);
-        //do {
-        //    result = getModemResponse();
-        //} while (!result.contains("1,1"));
-
-        writeCommandToModem(messageAttachContext);
-        result = checkIPAddr();
     }
 
     public String checkSecurity(String security) {
@@ -598,31 +643,25 @@ public class ModemComm {
         String oldWirelessComm = wirelessComm;
         String oldWirelessCommLabel = wirelessCommLabel;
 
-        //detachnig context to enable change!!
-        writeCommandToModem(messageDetachContext);
+        detachConnection();
 
-        //System.out.println("In wireless 1");
+        //writeCommandToModem(messageDetachContext);
+        //result = getModemResponse();
+
+        //writeCommandToModem("AT+CGATT=0"+CR);
+        //result = getModemResponse();
+
 
         writeCommandToModem(messageCheckOperator);
-        result = modemResponse;
-
-        //System.out.println("IN  wireless" + result);
-
-        if(result==null) {
-            writeCommandToModem(messageCheckOperator);
-            result = modemResponse;
-        }
+        result = getModemResponse();
 
         while (!result.contains("+COPS:")) {
-            //System.out.println("IN lool in wireless" + result);
             writeCommandToModem(messageCheckOperator);
             result = getModemResponse();
         }
 
         String values[] = result.split(",");
         operator = values[2].trim();
-
-        //System.out.println("In wireless 2");
 
         Object selectedValue = JOptionPane.showInputDialog(null, "Choose Wireless Connection", "Wireless Type of Connection",
                 JOptionPane.INFORMATION_MESSAGE, null, networkOptions, networkOptions[0]);
@@ -632,7 +671,7 @@ public class ModemComm {
         wirelessCommLabel = tmpWirelessComm[1];
 
         writeCommandToModem(messageChangeWirelessComm + ","+ operator + "," + wirelessComm +CR);
-        result = modemResponse;
+        result =getModemResponse();
 
         if(!result.contains("AT+COPS"))result = getModemResponse();
         if(result.contains("ERROR")){
@@ -641,7 +680,11 @@ public class ModemComm {
             return result;
         }
 
-        this.changeIP();
+        //try {
+            //this.changeIP();
+        //} catch (IOException e) {
+        //    e.printStackTrace();
+        //}
         return result;
 
     }
@@ -665,11 +708,6 @@ public class ModemComm {
         if (result.contains("6,\"LTE\"")) return new String("LTE - Full Supported");
         else if (result.contains("101,\"LTE\"")) return new String("LTE - Sub-mode Supported");
         else return new String("LTE - Not Supported or NO info");
-    }
-
-    public void checkPDPContext() {
-        if (connection == false) return;
-        writeCommandToModem(messageCheckPDPContext);
     }
 
     public boolean disconnect() {
